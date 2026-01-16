@@ -117,17 +117,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Monthly Package */}
-          <div className="mt-12 card bg-gs-black text-gs-white text-center">
-            <h3 className="text-2xl font-bold mb-2">Monthly Private Package</h3>
-            <p className="text-4xl font-bold text-gs-green mb-2">$680<span className="text-lg font-normal">/month</span></p>
-            <p className="text-gs-gray-400 mb-4">
-              8 private sessions per month (2x per week) at $85 per session. Save $120!
-            </p>
-            <Link href="/auth/register" className="btn-green inline-block">
-              Get Started
-            </Link>
-          </div>
         </div>
       </section>
 

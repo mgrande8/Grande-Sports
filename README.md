@@ -138,3 +138,4 @@ To add a "Book Training" link to your Shopify site:
 ## Support
 
 For questions, contact Grande Sports.
+
