@@ -1,0 +1,460 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
+import Header from '@/components/Header'
+import { PageLoader } from '@/components/LoadingSpinner'
+import { User } from '@/lib/types'
+import { formatDate } from '@/lib/utils'
+import { ArrowLeft, Search, User as UserIcon, Activity, X } from 'lucide-react'
+import Link from 'next/link'
+import { format } from 'date-fns'
+
+interface AthleteWithStats extends User {
+  total_sessions: number
+}
+
+export default function AdminAthletesPage() {
+  const [athletes, setAthletes] = useState<AthleteWithStats[]>([])
+  const [filteredAthletes, setFilteredAthletes] = useState<AthleteWithStats[]>([])
+  const [search, setSearch] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [showTestModal, setShowTestModal] = useState(false)
+  const [selectedAthlete, setSelectedAthlete] = useState<AthleteWithStats | null>(null)
+  const [testForm, setTestForm] = useState({
+    test_date: format(new Date(), 'yyyy-MM-dd'),
+    drill_180: '',
+    drill_open_90: '',
+    drill_v: '',
+    dribble_20_yard: '',
+    dribble_v: '',
+    dribble_t: '',
+    juggling_both: '',
+    juggling_left: '',
+    juggling_right: '',
+    straight_line_both: '',
+    straight_line_left: '',
+    straight_line_right: '',
+    notes: '',
+  })
+  const router = useRouter()
+  const supabase = createClient()
+
+  useEffect(() => {
+    checkAdminAndFetch()
+  }, [])
+
+  useEffect(() => {
+    if (search) {
+      const filtered = athletes.filter(a => 
+        a.full_name.toLowerCase().includes(search.toLowerCase()) ||
+        a.email.toLowerCase().includes(search.toLowerCase()) ||
+        a.position?.toLowerCase().includes(search.toLowerCase())
+      )
+      setFilteredAthletes(filtered)
+    } else {
+      setFilteredAthletes(athletes)
+    }
+  }, [search, athletes])
+
+  const checkAdminAndFetch = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      router.push('/auth/login')
+      return
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile?.is_admin) {
+      router.push('/dashboard')
+      return
+    }
+
+    await fetchAthletes()
+    setLoading(false)
+  }
+
+  const fetchAthletes = async () => {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('is_admin', false)
+      .order('full_name', { ascending: true })
+
+    if (profiles) {
+      // Get booking counts for each athlete
+      const athletesWithStats = await Promise.all(
+        profiles.map(async (profile) => {
+          const { count } = await supabase
+            .from('bookings')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', profile.id)
+            .in('status', ['confirmed', 'completed'])
+
+          return {
+            ...profile,
+            total_sessions: count || 0,
+          }
+        })
+      )
+      setAthletes(athletesWithStats)
+    }
+  }
+
+  const openTestModal = (athlete: AthleteWithStats) => {
+    setSelectedAthlete(athlete)
+    setTestForm({
+      test_date: format(new Date(), 'yyyy-MM-dd'),
+      drill_180: '',
+      drill_open_90: '',
+      drill_v: '',
+      dribble_20_yard: '',
+      dribble_v: '',
+      dribble_t: '',
+      juggling_both: '',
+      juggling_left: '',
+      juggling_right: '',
+      straight_line_both: '',
+      straight_line_left: '',
+      straight_line_right: '',
+      notes: '',
+    })
+    setShowTestModal(true)
+  }
+
+  const handleTestSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedAthlete) return
+
+    const testData = {
+      user_id: selectedAthlete.id,
+      test_date: testForm.test_date,
+      drill_180: testForm.drill_180 ? parseInt(testForm.drill_180) : null,
+      drill_open_90: testForm.drill_open_90 ? parseInt(testForm.drill_open_90) : null,
+      drill_v: testForm.drill_v ? parseInt(testForm.drill_v) : null,
+      dribble_20_yard: testForm.dribble_20_yard ? parseFloat(testForm.dribble_20_yard) : null,
+      dribble_v: testForm.dribble_v ? parseFloat(testForm.dribble_v) : null,
+      dribble_t: testForm.dribble_t ? parseFloat(testForm.dribble_t) : null,
+      juggling_both: testForm.juggling_both ? parseInt(testForm.juggling_both) : null,
+      juggling_left: testForm.juggling_left ? parseInt(testForm.juggling_left) : null,
+      juggling_right: testForm.juggling_right ? parseInt(testForm.juggling_right) : null,
+      straight_line_both: testForm.straight_line_both ? parseFloat(testForm.straight_line_both) : null,
+      straight_line_left: testForm.straight_line_left ? parseFloat(testForm.straight_line_left) : null,
+      straight_line_right: testForm.straight_line_right ? parseFloat(testForm.straight_line_right) : null,
+      notes: testForm.notes || null,
+    }
+
+    const { error } = await supabase
+      .from('technical_tests')
+      .insert(testData)
+
+    if (error) {
+      alert('Failed to save test results')
+    } else {
+      alert('Test results saved successfully!')
+      setShowTestModal(false)
+    }
+  }
+
+  if (loading) {
+    return <PageLoader />
+  }
+
+  return (
+    <div className="min-h-screen bg-gs-gray-100">
+      <Header />
+
+      <main className="py-8">
+        <div className="max-w-6xl mx-auto px-4">
+          <Link href="/admin" className="inline-flex items-center text-gs-gray-600 hover:text-gs-black mb-6">
+            <ArrowLeft size={16} className="mr-1" />
+            Back to Admin
+          </Link>
+
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-3xl font-bold">Athletes</h1>
+              <p className="text-gs-gray-600">View athletes and input technical testing</p>
+            </div>
+          </div>
+
+          {/* Search */}
+          <div className="card mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gs-gray-400" size={20} />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name, email, or position..."
+                className="input-field pl-10"
+              />
+            </div>
+          </div>
+
+          {/* Athletes List */}
+          {filteredAthletes.length === 0 ? (
+            <div className="card text-center py-12">
+              <UserIcon className="mx-auto text-gs-gray-400 mb-4" size={48} />
+              <h2 className="text-xl font-bold mb-2">No Athletes Found</h2>
+              <p className="text-gs-gray-600">
+                {search ? 'Try a different search term.' : 'Athletes will appear here once they register.'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredAthletes.map((athlete) => (
+                <div key={athlete.id} className="card">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-gs-gray-200 rounded-full flex items-center justify-center">
+                        <UserIcon className="text-gs-gray-600" size={24} />
+                      </div>
+                      <div>
+                        <h3 className="font-bold">{athlete.full_name}</h3>
+                        <p className="text-sm text-gs-gray-600">{athlete.email}</p>
+                        <div className="flex gap-4 mt-1 text-xs text-gs-gray-500">
+                          {athlete.position && <span>{athlete.position}</span>}
+                          <span>{athlete.total_sessions} sessions</span>
+                          <span>Joined {formatDate(athlete.created_at)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => openTestModal(athlete)}
+                      className="btn-secondary flex items-center gap-2 text-sm"
+                    >
+                      <Activity size={16} />
+                      Add Test
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Technical Test Modal */}
+      {showTestModal && selectedAthlete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold">Technical Testing</h2>
+                  <p className="text-gs-gray-600">{selectedAthlete.full_name}</p>
+                </div>
+                <button onClick={() => setShowTestModal(false)} className="text-gs-gray-500 hover:text-gs-black">
+                  <X size={24} />
+                </button>
+              </div>
+
+              <form onSubmit={handleTestSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gs-gray-700 mb-1">
+                    Test Date *
+                  </label>
+                  <input
+                    type="date"
+                    value={testForm.test_date}
+                    onChange={(e) => setTestForm({ ...testForm, test_date: e.target.value })}
+                    className="input-field"
+                    required
+                  />
+                </div>
+
+                {/* Technical Passing */}
+                <div>
+                  <h3 className="font-semibold text-gs-gray-700 mb-3 uppercase text-sm tracking-wide">
+                    Technical Passing (Score)
+                  </h3>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm text-gs-gray-600 mb-1">180 Drill</label>
+                      <input
+                        type="number"
+                        value={testForm.drill_180}
+                        onChange={(e) => setTestForm({ ...testForm, drill_180: e.target.value })}
+                        className="input-field"
+                        placeholder="Score"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gs-gray-600 mb-1">Open 90 Drill</label>
+                      <input
+                        type="number"
+                        value={testForm.drill_open_90}
+                        onChange={(e) => setTestForm({ ...testForm, drill_open_90: e.target.value })}
+                        className="input-field"
+                        placeholder="Score"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gs-gray-600 mb-1">V Drill</label>
+                      <input
+                        type="number"
+                        value={testForm.drill_v}
+                        onChange={(e) => setTestForm({ ...testForm, drill_v: e.target.value })}
+                        className="input-field"
+                        placeholder="Score"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dribbling */}
+                <div>
+                  <h3 className="font-semibold text-gs-gray-700 mb-3 uppercase text-sm tracking-wide">
+                    Dribbling (Time in seconds)
+                  </h3>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm text-gs-gray-600 mb-1">20 Yard</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={testForm.dribble_20_yard}
+                        onChange={(e) => setTestForm({ ...testForm, dribble_20_yard: e.target.value })}
+                        className="input-field"
+                        placeholder="Seconds"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gs-gray-600 mb-1">V Dribble</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={testForm.dribble_v}
+                        onChange={(e) => setTestForm({ ...testForm, dribble_v: e.target.value })}
+                        className="input-field"
+                        placeholder="Seconds"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gs-gray-600 mb-1">T Dribble</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={testForm.dribble_t}
+                        onChange={(e) => setTestForm({ ...testForm, dribble_t: e.target.value })}
+                        className="input-field"
+                        placeholder="Seconds"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Ball Control */}
+                <div>
+                  <h3 className="font-semibold text-gs-gray-700 mb-3 uppercase text-sm tracking-wide">
+                    Ball Control
+                  </h3>
+                  <div className="grid grid-cols-3 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm text-gs-gray-600 mb-1">Juggling (Both)</label>
+                      <input
+                        type="number"
+                        value={testForm.juggling_both}
+                        onChange={(e) => setTestForm({ ...testForm, juggling_both: e.target.value })}
+                        className="input-field"
+                        placeholder="Count"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gs-gray-600 mb-1">Juggling (Left)</label>
+                      <input
+                        type="number"
+                        value={testForm.juggling_left}
+                        onChange={(e) => setTestForm({ ...testForm, juggling_left: e.target.value })}
+                        className="input-field"
+                        placeholder="Count"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gs-gray-600 mb-1">Juggling (Right)</label>
+                      <input
+                        type="number"
+                        value={testForm.juggling_right}
+                        onChange={(e) => setTestForm({ ...testForm, juggling_right: e.target.value })}
+                        className="input-field"
+                        placeholder="Count"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm text-gs-gray-600 mb-1">Straight Line (Both)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={testForm.straight_line_both}
+                        onChange={(e) => setTestForm({ ...testForm, straight_line_both: e.target.value })}
+                        className="input-field"
+                        placeholder="Seconds"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gs-gray-600 mb-1">Straight Line (Left)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={testForm.straight_line_left}
+                        onChange={(e) => setTestForm({ ...testForm, straight_line_left: e.target.value })}
+                        className="input-field"
+                        placeholder="Seconds"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gs-gray-600 mb-1">Straight Line (Right)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={testForm.straight_line_right}
+                        onChange={(e) => setTestForm({ ...testForm, straight_line_right: e.target.value })}
+                        className="input-field"
+                        placeholder="Seconds"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gs-gray-700 mb-1">
+                    Notes
+                  </label>
+                  <textarea
+                    value={testForm.notes}
+                    onChange={(e) => setTestForm({ ...testForm, notes: e.target.value })}
+                    className="input-field"
+                    rows={3}
+                    placeholder="Any observations or feedback..."
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowTestModal(false)}
+                    className="btn-secondary flex-1"
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn-primary flex-1">
+                    Save Results
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
