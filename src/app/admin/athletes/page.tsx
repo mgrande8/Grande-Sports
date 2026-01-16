@@ -7,7 +7,7 @@ import Header from '@/components/Header'
 import { PageLoader } from '@/components/LoadingSpinner'
 import { User } from '@/lib/types'
 import { formatDate } from '@/lib/utils'
-import { ArrowLeft, Search, User as UserIcon, Activity, X } from 'lucide-react'
+import { ArrowLeft, Search, User as UserIcon, Activity, X, Eye, Edit, Trash2, Phone, Mail, Calendar, MapPin, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 
@@ -20,6 +20,8 @@ export default function AdminAthletesPage() {
   const [filteredAthletes, setFilteredAthletes] = useState<AthleteWithStats[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
+
+  // Test Modal
   const [showTestModal, setShowTestModal] = useState(false)
   const [selectedAthlete, setSelectedAthlete] = useState<AthleteWithStats | null>(null)
   const [testForm, setTestForm] = useState({
@@ -38,6 +40,26 @@ export default function AdminAthletesPage() {
     straight_line_right: '',
     notes: '',
   })
+
+  // View Modal
+  const [showViewModal, setShowViewModal] = useState(false)
+  const [viewingAthlete, setViewingAthlete] = useState<AthleteWithStats | null>(null)
+
+  // Edit Modal
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingAthlete, setEditingAthlete] = useState<AthleteWithStats | null>(null)
+  const [editForm, setEditForm] = useState({
+    full_name: '',
+    phone: '',
+    position: '',
+    emergency_contact: '',
+    emergency_phone: '',
+  })
+  const [saving, setSaving] = useState(false)
+
+  // Delete
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+
   const router = useRouter()
   const supabase = createClient()
 
@@ -47,7 +69,7 @@ export default function AdminAthletesPage() {
 
   useEffect(() => {
     if (search) {
-      const filtered = athletes.filter(a => 
+      const filtered = athletes.filter(a =>
         a.full_name.toLowerCase().includes(search.toLowerCase()) ||
         a.email.toLowerCase().includes(search.toLowerCase()) ||
         a.position?.toLowerCase().includes(search.toLowerCase())
@@ -107,6 +129,76 @@ export default function AdminAthletesPage() {
     }
   }
 
+  // View Modal
+  const openViewModal = (athlete: AthleteWithStats) => {
+    setViewingAthlete(athlete)
+    setShowViewModal(true)
+  }
+
+  // Edit Modal
+  const openEditModal = (athlete: AthleteWithStats) => {
+    setEditingAthlete(athlete)
+    setEditForm({
+      full_name: athlete.full_name || '',
+      phone: athlete.phone || '',
+      position: athlete.position || '',
+      emergency_contact: athlete.emergency_contact || '',
+      emergency_phone: athlete.emergency_phone || '',
+    })
+    setShowEditModal(true)
+  }
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingAthlete) return
+
+    setSaving(true)
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        full_name: editForm.full_name,
+        phone: editForm.phone,
+        position: editForm.position,
+        emergency_contact: editForm.emergency_contact,
+        emergency_phone: editForm.emergency_phone,
+      })
+      .eq('id', editingAthlete.id)
+
+    if (error) {
+      alert('Failed to update athlete')
+    } else {
+      alert('Athlete updated successfully!')
+      setShowEditModal(false)
+      await fetchAthletes()
+    }
+
+    setSaving(false)
+  }
+
+  // Delete
+  const handleDelete = async (athlete: AthleteWithStats) => {
+    if (!confirm(`Are you sure you want to delete ${athlete.full_name}? This action cannot be undone.`)) {
+      return
+    }
+
+    setDeletingId(athlete.id)
+
+    const { error } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('id', athlete.id)
+
+    if (error) {
+      alert('Failed to delete athlete. They may have bookings or other data.')
+    } else {
+      await fetchAthletes()
+    }
+
+    setDeletingId(null)
+  }
+
+  // Test Modal
   const openTestModal = (athlete: AthleteWithStats) => {
     setSelectedAthlete(athlete)
     setTestForm({
@@ -180,7 +272,10 @@ export default function AdminAthletesPage() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold">Athletes</h1>
-              <p className="text-gs-gray-600">View athletes and input technical testing</p>
+              <p className="text-gs-gray-600">Manage athletes and input technical testing</p>
+            </div>
+            <div className="text-sm text-gs-gray-600">
+              {athletes.length} total athletes
             </div>
           </div>
 
@@ -226,13 +321,37 @@ export default function AdminAthletesPage() {
                         </div>
                       </div>
                     </div>
-                    <button
-                      onClick={() => openTestModal(athlete)}
-                      className="btn-secondary flex items-center gap-2 text-sm"
-                    >
-                      <Activity size={16} />
-                      Add Test
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => openViewModal(athlete)}
+                        className="p-2 text-gs-gray-600 hover:text-gs-black hover:bg-gs-gray-100 rounded transition-colors"
+                        title="View Details"
+                      >
+                        <Eye size={18} />
+                      </button>
+                      <button
+                        onClick={() => openEditModal(athlete)}
+                        className="p-2 text-gs-gray-600 hover:text-gs-black hover:bg-gs-gray-100 rounded transition-colors"
+                        title="Edit"
+                      >
+                        <Edit size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(athlete)}
+                        disabled={deletingId === athlete.id}
+                        className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                        title="Delete"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                      <button
+                        onClick={() => openTestModal(athlete)}
+                        className="btn-secondary flex items-center gap-2 text-sm ml-2"
+                      >
+                        <Activity size={16} />
+                        Add Test
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -240,6 +359,209 @@ export default function AdminAthletesPage() {
           )}
         </div>
       </main>
+
+      {/* View Athlete Modal */}
+      {showViewModal && viewingAthlete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold">Athlete Details</h2>
+                <button onClick={() => setShowViewModal(false)} className="text-gs-gray-500 hover:text-gs-black">
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="text-center mb-6">
+                <div className="w-20 h-20 bg-gs-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <UserIcon className="text-gs-gray-600" size={40} />
+                </div>
+                <h3 className="text-xl font-bold">{viewingAthlete.full_name}</h3>
+                {viewingAthlete.position && (
+                  <span className="inline-block px-3 py-1 bg-gs-green bg-opacity-10 text-gs-green text-sm font-medium rounded-full mt-2">
+                    {viewingAthlete.position}
+                  </span>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-3 bg-gs-gray-50 rounded">
+                  <Mail className="text-gs-gray-500" size={18} />
+                  <div>
+                    <p className="text-xs text-gs-gray-500">Email</p>
+                    <p className="font-medium">{viewingAthlete.email}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-3 bg-gs-gray-50 rounded">
+                  <Phone className="text-gs-gray-500" size={18} />
+                  <div>
+                    <p className="text-xs text-gs-gray-500">Phone</p>
+                    <p className="font-medium">{viewingAthlete.phone || 'Not provided'}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-3 bg-gs-gray-50 rounded">
+                  <Calendar className="text-gs-gray-500" size={18} />
+                  <div>
+                    <p className="text-xs text-gs-gray-500">Member Since</p>
+                    <p className="font-medium">{formatDate(viewingAthlete.created_at)}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-3 bg-gs-gray-50 rounded">
+                  <Activity className="text-gs-gray-500" size={18} />
+                  <div>
+                    <p className="text-xs text-gs-gray-500">Total Sessions</p>
+                    <p className="font-medium">{viewingAthlete.total_sessions} sessions booked</p>
+                  </div>
+                </div>
+
+                {(viewingAthlete.emergency_contact || viewingAthlete.emergency_phone) && (
+                  <div className="border-t border-gs-gray-200 pt-4 mt-4">
+                    <h4 className="font-semibold text-sm text-gs-gray-700 mb-3 flex items-center gap-2">
+                      <AlertTriangle size={16} className="text-orange-500" />
+                      Emergency Contact
+                    </h4>
+                    <div className="p-3 bg-orange-50 rounded">
+                      <p className="font-medium">{viewingAthlete.emergency_contact || 'Not provided'}</p>
+                      <p className="text-sm text-gs-gray-600">{viewingAthlete.emergency_phone || 'No phone'}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3 pt-6">
+                <button
+                  onClick={() => {
+                    setShowViewModal(false)
+                    openEditModal(viewingAthlete)
+                  }}
+                  className="btn-secondary flex-1"
+                >
+                  Edit Profile
+                </button>
+                <button
+                  onClick={() => setShowViewModal(false)}
+                  className="btn-primary flex-1"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Athlete Modal */}
+      {showEditModal && editingAthlete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold">Edit Athlete</h2>
+                  <p className="text-gs-gray-600 text-sm">{editingAthlete.email}</p>
+                </div>
+                <button onClick={() => setShowEditModal(false)} className="text-gs-gray-500 hover:text-gs-black">
+                  <X size={24} />
+                </button>
+              </div>
+
+              <form onSubmit={handleEditSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gs-gray-700 mb-1">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={editForm.full_name}
+                    onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                    className="input-field"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gs-gray-700 mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    value={editForm.phone}
+                    onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                    className="input-field"
+                    placeholder="(555) 123-4567"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gs-gray-700 mb-1">
+                    Position
+                  </label>
+                  <select
+                    value={editForm.position}
+                    onChange={(e) => setEditForm({ ...editForm, position: e.target.value })}
+                    className="input-field"
+                  >
+                    <option value="">Select position</option>
+                    <option value="Goalkeeper">Goalkeeper</option>
+                    <option value="Defender">Defender</option>
+                    <option value="Midfielder">Midfielder</option>
+                    <option value="Forward">Forward</option>
+                    <option value="Multiple">Multiple Positions</option>
+                  </select>
+                </div>
+
+                <div className="border-t border-gs-gray-200 pt-4">
+                  <h3 className="font-semibold mb-3">Emergency Contact</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gs-gray-700 mb-1">
+                        Contact Name
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.emergency_contact}
+                        onChange={(e) => setEditForm({ ...editForm, emergency_contact: e.target.value })}
+                        className="input-field"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gs-gray-700 mb-1">
+                        Contact Phone
+                      </label>
+                      <input
+                        type="tel"
+                        value={editForm.emergency_phone}
+                        onChange={(e) => setEditForm({ ...editForm, emergency_phone: e.target.value })}
+                        className="input-field"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowEditModal(false)}
+                    className="btn-secondary flex-1"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="btn-primary flex-1 disabled:opacity-50"
+                  >
+                    {saving ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Technical Test Modal */}
       {showTestModal && selectedAthlete && (

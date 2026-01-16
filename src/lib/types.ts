@@ -93,6 +93,18 @@ export interface Message {
   created_at: string
 }
 
+export interface SessionCredit {
+  id: string
+  user_id: string
+  credits: number
+  reason?: string
+  issued_by?: string
+  created_at: string
+  used_at?: string
+  booking_id?: string
+  is_active: boolean
+}
+
 // Pricing constants
 export const PRICING = {
   private: 95,
