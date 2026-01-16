@@ -7,7 +7,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import LoadingSpinner, { PageLoader } from '@/components/LoadingSpinner'
 import { formatDate, formatTime, formatCurrency, getSessionTypeLabel, getSessionTypeColor, canCancelBooking, cn } from '@/lib/utils'
-import { Calendar, Clock, MapPin, CreditCard, TrendingUp, User, AlertCircle, CheckCircle, XCircle } from 'lucide-react'
+import { Calendar, Clock, MapPin, CreditCard, TrendingUp, User, AlertCircle, CheckCircle, XCircle, Settings } from 'lucide-react'
 import Link from 'next/link'
 
 interface BookingWithSession {
@@ -184,12 +184,16 @@ export default function DashboardPage() {
           </div>
 
           {/* Quick Actions */}
-          <div className="flex gap-4 mb-8">
+          <div className="flex flex-wrap gap-4 mb-8">
             <Link href="/book" className="btn-primary">
               Book New Session
             </Link>
             <Link href="/dashboard/history" className="btn-secondary">
               Payment History
+            </Link>
+            <Link href="/dashboard/settings" className="btn-secondary flex items-center gap-2">
+              <Settings size={18} />
+              Settings
             </Link>
           </div>
 

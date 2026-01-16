@@ -65,11 +65,17 @@ export default function Header({ showNav = true }: HeaderProps) {
               </Link>
               {user ? (
                 <>
-                  <Link 
-                    href="/dashboard" 
+                  <Link
+                    href="/dashboard"
                     className="text-gs-white hover:text-gs-green transition-colors font-medium"
                   >
                     Dashboard
+                  </Link>
+                  <Link
+                    href="/dashboard/settings"
+                    className="text-gs-gray-400 hover:text-gs-white transition-colors"
+                  >
+                    <Settings size={18} />
                   </Link>
                   {isAdmin && (
                     <Link 
@@ -131,21 +137,29 @@ export default function Header({ showNav = true }: HeaderProps) {
               </Link>
               {user ? (
                 <>
-                  <Link 
-                    href="/dashboard" 
+                  <Link
+                    href="/dashboard"
                     className="text-gs-white hover:text-gs-green transition-colors font-medium py-2"
                     onClick={() => setMenuOpen(false)}
                   >
                     <BarChart3 className="inline mr-2" size={18} />
                     Dashboard
                   </Link>
+                  <Link
+                    href="/dashboard/settings"
+                    className="text-gs-white hover:text-gs-green transition-colors font-medium py-2"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <Settings className="inline mr-2" size={18} />
+                    Settings
+                  </Link>
                   {isAdmin && (
-                    <Link 
-                      href="/admin" 
+                    <Link
+                      href="/admin"
                       className="text-gs-green hover:text-green-400 transition-colors font-medium py-2"
                       onClick={() => setMenuOpen(false)}
                     >
-                      <Settings className="inline mr-2" size={18} />
+                      <User className="inline mr-2" size={18} />
                       Admin
                     </Link>
                   )}
