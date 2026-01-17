@@ -42,7 +42,7 @@ export default function AdminDiscountsPage() {
     const { data: profile } = await supabase
       .from('profiles')
       .select('is_admin')
-      .eq('id', user.id)
+      .eq('email', user.email)
       .single()
 
     if (!profile?.is_admin) {
