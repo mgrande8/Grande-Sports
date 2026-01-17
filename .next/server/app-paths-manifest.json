@@ -1,0 +1,20 @@
+{
+  "/_not-found": "app/_not-found.js",
+  "/admin/payments/page": "app/admin/payments/page.js",
+  "/api/refund/route": "app/api/refund/route.js",
+  "/api/webhook/route": "app/api/webhook/route.js",
+  "/admin/athletes/page": "app/admin/athletes/page.js",
+  "/auth/callback/route": "app/auth/callback/route.js",
+  "/admin/page": "app/admin/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/auth/register/page": "app/auth/register/page.js",
+  "/dashboard/history/page": "app/dashboard/history/page.js",
+  "/book/page": "app/book/page.js",
+  "/dashboard/progress/page": "app/dashboard/progress/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/dashboard/settings/page": "app/dashboard/settings/page.js",
+  "/admin/discounts/page": "app/admin/discounts/page.js",
+  "/api/checkout/route": "app/api/checkout/route.js",
+  "/page": "app/page.js",
+  "/admin/sessions/page": "app/admin/sessions/page.js"
+}

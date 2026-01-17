@@ -10,7 +10,7 @@ export default function Footer() {
           <div>
             <h3 className="text-xl font-bold mb-4">Grande Sports</h3>
             <p className="text-gs-gray-400 text-sm">
-              Empowering footballers to achieve their full potential both on and off the field.
+              Become a Better Footballer
             </p>
           </div>
 

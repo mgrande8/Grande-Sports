@@ -7,7 +7,7 @@ import Header from '@/components/Header'
 import { PageLoader } from '@/components/LoadingSpinner'
 import { User } from '@/lib/types'
 import { formatDate } from '@/lib/utils'
-import { ArrowLeft, Search, User as UserIcon, Activity, X, Eye, Edit, Trash2, Phone, Mail, Calendar, MapPin, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, Search, User as UserIcon, Activity, X, Eye, Edit, Trash2, Phone, Mail, Calendar, MapPin, AlertTriangle, Send } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 
@@ -60,6 +60,15 @@ export default function AdminAthletesPage() {
   // Delete
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
+  // Email Modal
+  const [showEmailModal, setShowEmailModal] = useState(false)
+  const [emailingAthlete, setEmailingAthlete] = useState<AthleteWithStats | null>(null)
+  const [emailForm, setEmailForm] = useState({
+    subject: '',
+    message: '',
+  })
+  const [sendingEmail, setSendingEmail] = useState(false)
+
   const router = useRouter()
   const supabase = createClient()
 
@@ -87,13 +96,16 @@ export default function AdminAthletesPage() {
       return
     }
 
+    // Restrict admin access to specific email only
+    const ADMIN_EMAIL = 'td.grandesportstraining@gmail.com'
+
     const { data: profile } = await supabase
       .from('profiles')
-      .select('is_admin')
+      .select('is_admin, email')
       .eq('id', user.id)
       .single()
 
-    if (!profile?.is_admin) {
+    if (!profile?.is_admin || profile.email !== ADMIN_EMAIL) {
       router.push('/dashboard')
       return
     }
@@ -196,6 +208,51 @@ export default function AdminAthletesPage() {
     }
 
     setDeletingId(null)
+  }
+
+  // Email Modal
+  const openEmailModal = (athlete: AthleteWithStats) => {
+    setEmailingAthlete(athlete)
+    setEmailForm({ subject: '', message: '' })
+    setShowEmailModal(true)
+  }
+
+  const handleSendEmail = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!emailingAthlete) return
+
+    setSendingEmail(true)
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({
+          to: emailingAthlete.email,
+          subject: emailForm.subject,
+          message: emailForm.message,
+          userId: emailingAthlete.id,
+        }),
+      })
+
+      if (response.ok) {
+        alert('Email sent successfully!')
+        setShowEmailModal(false)
+        setEmailForm({ subject: '', message: '' })
+      } else {
+        const data = await response.json()
+        alert(data.error || 'Failed to send email')
+      }
+    } catch (err) {
+      alert('Failed to send email')
+    }
+
+    setSendingEmail(false)
   }
 
   // Test Modal
@@ -335,6 +392,13 @@ export default function AdminAthletesPage() {
                         title="Edit"
                       >
                         <Edit size={18} />
+                      </button>
+                      <button
+                        onClick={() => openEmailModal(athlete)}
+                        className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                        title="Send Email"
+                      >
+                        <Send size={18} />
                       </button>
                       <button
                         onClick={() => handleDelete(athlete)}
@@ -770,6 +834,77 @@ export default function AdminAthletesPage() {
                   </button>
                   <button type="submit" className="btn-primary flex-1">
                     Save Results
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Email Modal */}
+      {showEmailModal && emailingAthlete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-lg w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold">Send Email</h2>
+                  <p className="text-gs-gray-600 text-sm">To: {emailingAthlete.email}</p>
+                </div>
+                <button onClick={() => setShowEmailModal(false)} className="text-gs-gray-500 hover:text-gs-black">
+                  <X size={24} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSendEmail} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gs-gray-700 mb-1">
+                    Subject *
+                  </label>
+                  <input
+                    type="text"
+                    value={emailForm.subject}
+                    onChange={(e) => setEmailForm({ ...emailForm, subject: e.target.value })}
+                    className="input-field"
+                    placeholder="e.g., Session Reminder"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gs-gray-700 mb-1">
+                    Message *
+                  </label>
+                  <textarea
+                    value={emailForm.message}
+                    onChange={(e) => setEmailForm({ ...emailForm, message: e.target.value })}
+                    className="input-field"
+                    rows={6}
+                    placeholder="Write your message here..."
+                    required
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowEmailModal(false)}
+                    className="btn-secondary flex-1"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={sendingEmail}
+                    className="btn-primary flex-1 flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {sendingEmail ? 'Sending...' : (
+                      <>
+                        <Send size={18} />
+                        Send Email
+                      </>
+                    )}
                   </button>
                 </div>
               </form>

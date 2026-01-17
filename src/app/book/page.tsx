@@ -9,8 +9,9 @@ import LoadingSpinner from '@/components/LoadingSpinner'
 import { Session } from '@/lib/types'
 import { formatCurrency, calculateDiscountedPrice } from '@/lib/utils'
 import { format, addDays, startOfDay, endOfDay, addMonths } from 'date-fns'
-import { Calendar, Tag, CreditCard, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Calendar, Tag, CreditCard, ArrowRight, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export default function BookPage() {
   const [sessions, setSessions] = useState<Session[]>([])
@@ -167,8 +168,8 @@ export default function BookPage() {
     }
   }
 
-  // Generate date options for the next month
-  const dateOptions = Array.from({ length: 7 }, (_, i) => addDays(selectedDate, i - 3))
+  // Generate date options for the next 30 days (full month view)
+  const dateOptions = Array.from({ length: 30 }, (_, i) => addDays(new Date(), i))
     .filter(date => date >= startOfDay(new Date()) && date <= addMonths(new Date(), 1))
 
   return (
@@ -177,35 +178,25 @@ export default function BookPage() {
 
       <main className="flex-1 py-8">
         <div className="max-w-4xl mx-auto px-4">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center text-gs-gray-600 hover:text-gs-black mb-6"
+          >
+            <ArrowLeft size={16} className="mr-1" />
+            Back to Dashboard
+          </Link>
+
           <h1 className="text-3xl font-bold mb-2">Book a Session</h1>
           <p className="text-gs-gray-600 mb-8">Select a date and choose your training session</p>
 
-          {/* Date Selector */}
+          {/* Date Selector - Full Month View */}
           <div className="card mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold flex items-center gap-2">
-                <Calendar size={20} />
-                Select Date
-              </h2>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => navigateDate(-7)}
-                  className="p-2 hover:bg-gs-gray-100 rounded"
-                  disabled={selectedDate <= new Date()}
-                >
-                  <ChevronLeft size={20} />
-                </button>
-                <button
-                  onClick={() => navigateDate(7)}
-                  className="p-2 hover:bg-gs-gray-100 rounded"
-                  disabled={addDays(selectedDate, 7) > addMonths(new Date(), 1)}
-                >
-                  <ChevronRight size={20} />
-                </button>
-              </div>
-            </div>
+            <h2 className="font-semibold flex items-center gap-2 mb-4">
+              <Calendar size={20} />
+              Select Date (Next 30 Days)
+            </h2>
 
-            <div className="flex gap-2 overflow-x-auto pb-2">
+            <div className="grid grid-cols-5 sm:grid-cols-7 md:grid-cols-10 gap-2">
               {dateOptions.map((date) => (
                 <button
                   key={date.toISOString()}
@@ -213,7 +204,7 @@ export default function BookPage() {
                     setSelectedDate(date)
                     setSelectedSession(null)
                   }}
-                  className={`flex-shrink-0 px-4 py-3 text-center rounded-lg border-2 transition-colors ${
+                  className={`px-2 py-3 text-center rounded-lg border-2 transition-colors ${
                     format(date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
                       ? 'border-gs-green bg-gs-green text-white'
                       : 'border-gs-gray-200 hover:border-gs-gray-300'

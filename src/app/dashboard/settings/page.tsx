@@ -85,22 +85,32 @@ export default function SettingsPage() {
     setError('')
     setSuccess('')
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        full_name: formData.full_name,
-        phone: formData.phone,
-        position: formData.position,
-        emergency_contact: formData.emergency_contact,
-        emergency_phone: formData.emergency_phone,
-      })
-      .eq('id', user.id)
+    try {
+      const { data, error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: formData.full_name,
+          phone: formData.phone,
+          position: formData.position,
+          emergency_contact: formData.emergency_contact,
+          emergency_phone: formData.emergency_phone,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id)
+        .select()
 
-    if (error) {
-      setError('Failed to update profile. Please try again.')
-    } else {
-      setSuccess('Profile updated successfully!')
-      setTimeout(() => setSuccess(''), 3000)
+      if (updateError) {
+        console.error('Profile update error:', updateError)
+        setError(`Failed to update profile: ${updateError.message}`)
+      } else if (!data || data.length === 0) {
+        setError('No profile found to update. Please refresh and try again.')
+      } else {
+        setSuccess('Profile updated successfully!')
+        setTimeout(() => setSuccess(''), 3000)
+      }
+    } catch (err: any) {
+      console.error('Profile update exception:', err)
+      setError('An unexpected error occurred. Please try again.')
     }
 
     setSaving(false)

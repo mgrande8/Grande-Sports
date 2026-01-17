@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
         .eq('id', user.id)
     }
 
-    // Create Stripe Checkout session
+    // Create Stripe Checkout session with saved payment methods
     const checkoutSession = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
       payment_method_types: ['card'],
@@ -103,6 +103,16 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'payment',
+      // Save card for future purchases - returning customers will see their saved cards
+      payment_method_options: {
+        card: {
+          setup_future_usage: 'on_session',
+        },
+      },
+      // Allow customers to update saved payment methods
+      saved_payment_method_options: {
+        payment_method_save: 'enabled',
+      },
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?booking=success`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/book?cancelled=true`,
       metadata: {

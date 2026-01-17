@@ -39,13 +39,16 @@ export default function AdminDiscountsPage() {
       return
     }
 
+    // Restrict admin access to specific email only
+    const ADMIN_EMAIL = 'td.grandesportstraining@gmail.com'
+
     const { data: profile } = await supabase
       .from('profiles')
-      .select('is_admin')
+      .select('is_admin, email')
       .eq('id', user.id)
       .single()
 
-    if (!profile?.is_admin) {
+    if (!profile?.is_admin || profile.email !== ADMIN_EMAIL) {
       router.push('/dashboard')
       return
     }
