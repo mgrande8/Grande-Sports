@@ -109,10 +109,6 @@ export async function POST(request: NextRequest) {
           setup_future_usage: 'on_session',
         },
       },
-      // Allow customers to update saved payment methods
-      saved_payment_method_options: {
-        payment_method_save: 'enabled',
-      },
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?booking=success`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/book?cancelled=true`,
       metadata: {
