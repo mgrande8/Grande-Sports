@@ -43,13 +43,10 @@ export default function AdminPage() {
       return
     }
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('email', user.email)
-      .single()
+    // Hardcoded admin check - bypasses RLS issues
+    const ADMIN_EMAILS = ['td.grandesportstraining@gmail.com']
 
-    if (!profile?.is_admin) {
+    if (!user.email || !ADMIN_EMAILS.includes(user.email.toLowerCase())) {
       router.push('/dashboard')
       return
     }
