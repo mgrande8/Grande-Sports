@@ -22,9 +22,16 @@ export async function POST(request: NextRequest) {
     // Use service role client to bypass RLS
     const serviceClient = createServiceRoleClient()
 
+    // Ensure all sessions have is_active set to true and current_capacity to 0
+    const sessionsWithDefaults = sessions.map((session: any) => ({
+      ...session,
+      is_active: true,
+      current_capacity: 0,
+    }))
+
     const { data, error } = await serviceClient
       .from('sessions')
-      .insert(sessions)
+      .insert(sessionsWithDefaults)
       .select()
 
     if (error) {
