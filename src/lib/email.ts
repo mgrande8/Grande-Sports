@@ -32,7 +32,7 @@ export async function sendBookingConfirmationEmail(data: BookingEmailData) {
     <!-- Header -->
     <tr>
       <td style="background-color: #067A3A; padding: 30px 40px; text-align: center;">
-        <img src="${process.env.NEXT_PUBLIC_APP_URL}/logo-white.png" alt="Grande Sports" style="height: 50px; width: auto;" />
+        <img src="${process.env.NEXT_PUBLIC_APP_URL}/logo-email.png" alt="Grande Sports" style="height: 60px; width: auto;" />
       </td>
     </tr>
 
@@ -209,7 +209,7 @@ export async function sendSessionAssignedEmail(data: SessionAssignedEmailData) {
     <!-- Header -->
     <tr>
       <td style="background-color: #067A3A; padding: 30px 40px; text-align: center;">
-        <img src="${process.env.NEXT_PUBLIC_APP_URL}/logo-white.png" alt="Grande Sports" style="height: 50px; width: auto;" />
+        <img src="${process.env.NEXT_PUBLIC_APP_URL}/logo-email.png" alt="Grande Sports" style="height: 60px; width: auto;" />
       </td>
     </tr>
 
