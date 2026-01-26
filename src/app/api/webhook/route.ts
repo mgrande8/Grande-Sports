@@ -52,28 +52,39 @@ export async function POST(request: NextRequest) {
       await supabase.rpc('increment_discount_uses', { code_id: discount_code_id })
     }
 
-    // Get user and session details for email
+    // Get user and session details for email and capacity update
     const [userResult, sessionResult] = await Promise.all([
       supabase.from('profiles').select('email, full_name').eq('id', user_id).single(),
       supabase.from('sessions').select('*').eq('id', session_id).single(),
     ])
+
+    // Update session capacity
+    if (sessionResult.data) {
+      await supabase
+        .from('sessions')
+        .update({ current_capacity: sessionResult.data.current_capacity + 1 })
+        .eq('id', session_id)
+    }
 
     if (userResult.data && sessionResult.data) {
       const session = sessionResult.data
       const user = userResult.data
 
       // Send confirmation email
-      await sendBookingConfirmationEmail({
-        to: user.email,
-        athleteName: user.full_name,
-        sessionTitle: session.title,
-        sessionDate: formatDate(session.date),
-        sessionTime: formatTime(session.start_time),
-        sessionLocation: session.location || 'Miami Shores Park',
-        amountPaid: (checkoutSession.amount_total || 0) / 100,
-      })
-
-      console.log('Confirmation email sent to:', user.email)
+      try {
+        await sendBookingConfirmationEmail({
+          to: user.email,
+          athleteName: user.full_name,
+          sessionTitle: session.title,
+          sessionDate: formatDate(session.date),
+          sessionTime: formatTime(session.start_time),
+          sessionLocation: session.location || 'Bamford Park (Davie)',
+          amountPaid: (checkoutSession.amount_total || 0) / 100,
+        })
+        console.log('Confirmation email sent to:', user.email)
+      } catch (emailError) {
+        console.error('Failed to send confirmation email:', emailError)
+      }
     }
 
     console.log('Booking created successfully for user:', user_id)

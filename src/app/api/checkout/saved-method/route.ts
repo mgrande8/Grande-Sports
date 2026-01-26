@@ -91,6 +91,12 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to create booking' }, { status: 500 })
       }
 
+      // Update session capacity
+      await serviceClient
+        .from('sessions')
+        .update({ current_capacity: session.current_capacity + 1 })
+        .eq('id', sessionId)
+
       // Get user profile for email
       const { data: profile } = await serviceClient
         .from('profiles')
@@ -106,7 +112,7 @@ export async function POST(request: NextRequest) {
           sessionTitle: session.title,
           sessionDate: formatDate(session.date),
           sessionTime: formatTime(session.start_time),
-          sessionLocation: session.location || 'Miami Shores Park',
+          sessionLocation: session.location || 'Bamford Park (Davie)',
           amountPaid: 0,
         })
       }
@@ -163,6 +169,12 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Booking failed, please contact support' }, { status: 500 })
       }
 
+      // Update session capacity
+      await serviceClient
+        .from('sessions')
+        .update({ current_capacity: session.current_capacity + 1 })
+        .eq('id', sessionId)
+
       // Get user profile for email
       const { data: userProfile } = await serviceClient
         .from('profiles')
@@ -178,7 +190,7 @@ export async function POST(request: NextRequest) {
           sessionTitle: session.title,
           sessionDate: formatDate(session.date),
           sessionTime: formatTime(session.start_time),
-          sessionLocation: session.location || 'Miami Shores Park',
+          sessionLocation: session.location || 'Bamford Park (Davie)',
           amountPaid: finalPrice,
         })
       }

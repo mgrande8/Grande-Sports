@@ -82,15 +82,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create booking' }, { status: 500 })
     }
 
+    // Update session capacity (in case database trigger doesn't exist)
+    const { error: capacityError } = await serviceClient
+      .from('sessions')
+      .update({ current_capacity: session.current_capacity + 1 })
+      .eq('id', sessionId)
+
+    if (capacityError) {
+      console.error('Capacity update error:', capacityError)
+      // Don't fail the request, booking was created successfully
+    }
+
     // Send notification email to athlete
-    await sendSessionAssignedEmail({
-      to: athlete.email,
-      athleteName: athlete.full_name,
-      sessionTitle: session.title,
-      sessionDate: formatDate(session.date),
-      sessionTime: formatTime(session.start_time),
-      sessionLocation: session.location || 'Miami Shores Park',
-    })
+    try {
+      const emailResult = await sendSessionAssignedEmail({
+        to: athlete.email,
+        athleteName: athlete.full_name,
+        sessionTitle: session.title,
+        sessionDate: formatDate(session.date),
+        sessionTime: formatTime(session.start_time),
+        sessionLocation: session.location || 'Bamford Park (Davie)',
+      })
+
+      if (!emailResult.success) {
+        console.error('Failed to send email:', emailResult.error)
+      }
+    } catch (emailError) {
+      console.error('Email sending exception:', emailError)
+      // Don't fail the request, booking was created successfully
+    }
 
     return NextResponse.json({ success: true })
   } catch (error: any) {
