@@ -44,33 +44,30 @@ export default function RegisterPage() {
       return
     }
 
-    const { error } = await supabase.auth.signUp({
-      email: formData.email,
-      password: formData.password,
-      options: {
-        data: {
-          full_name: formData.fullName,
-        },
-      },
-    })
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          fullName: formData.fullName,
+          phone: formData.phone,
+          position: formData.position,
+        }),
+      })
 
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-    } else {
-      // Update profile with additional info
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        await supabase
-          .from('profiles')
-          .update({
-            full_name: formData.fullName,
-            phone: formData.phone,
-            position: formData.position,
-          })
-          .eq('id', user.id)
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || 'Failed to create account')
+        setLoading(false)
+      } else {
+        setSuccess(true)
       }
-      setSuccess(true)
+    } catch (err) {
+      setError('Failed to create account. Please try again.')
+      setLoading(false)
     }
   }
 
