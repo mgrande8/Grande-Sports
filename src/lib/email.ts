@@ -32,12 +32,7 @@ export async function sendBookingConfirmationEmail(data: BookingEmailData) {
     <!-- Header -->
     <tr>
       <td style="background-color: #067A3A; padding: 30px 40px; text-align: center;">
-        <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold; letter-spacing: 1px;">
-          GRANDE SPORTS
-        </h1>
-        <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0 0; font-size: 14px;">
-          Training & Development
-        </p>
+        <img src="${process.env.NEXT_PUBLIC_APP_URL}/logo-white.png" alt="Grande Sports" style="height: 50px; width: auto;" />
       </td>
     </tr>
 
@@ -121,12 +116,18 @@ export async function sendBookingConfirmationEmail(data: BookingEmailData) {
     <!-- Footer -->
     <tr>
       <td style="background-color: #101012; padding: 30px 40px; text-align: center;">
-        <p style="color: #ffffff; margin: 0 0 10px 0; font-size: 16px; font-weight: 600;">
+        <p style="color: #ffffff; margin: 0 0 15px 0; font-size: 16px; font-weight: 600;">
           Grande Sports Training
         </p>
-        <p style="color: rgba(255,255,255,0.7); margin: 0 0 20px 0; font-size: 14px;">
-          Elite Soccer Development in Miami
-        </p>
+        <!-- Social Icons -->
+        <div style="margin: 0 0 20px 0;">
+          <a href="https://www.instagram.com/grandesportstraining/" target="_blank" style="display: inline-block; margin: 0 8px;">
+            <img src="https://cdn-icons-png.flaticon.com/512/174/174855.png" alt="Instagram" style="width: 28px; height: 28px;" />
+          </a>
+          <a href="https://www.tiktok.com/@grandesportstraining" target="_blank" style="display: inline-block; margin: 0 8px;">
+            <img src="https://cdn-icons-png.flaticon.com/512/3046/3046121.png" alt="TikTok" style="width: 28px; height: 28px;" />
+          </a>
+        </div>
         <p style="color: rgba(255,255,255,0.5); margin: 0; font-size: 12px;">
           Questions? Reply to this email or contact us at<br>
           td.grandesportstraining@gmail.com
@@ -159,7 +160,7 @@ View your sessions at: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard
 Questions? Contact us at td.grandesportstraining@gmail.com
 
 Grande Sports Training
-Elite Soccer Development in Miami
+Instagram: @grandesportstraining | TikTok: @grandesportstraining
   `
 
   try {
@@ -208,12 +209,7 @@ export async function sendSessionAssignedEmail(data: SessionAssignedEmailData) {
     <!-- Header -->
     <tr>
       <td style="background-color: #067A3A; padding: 30px 40px; text-align: center;">
-        <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold; letter-spacing: 1px;">
-          GRANDE SPORTS
-        </h1>
-        <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0 0; font-size: 14px;">
-          Training & Development
-        </p>
+        <img src="${process.env.NEXT_PUBLIC_APP_URL}/logo-white.png" alt="Grande Sports" style="height: 50px; width: auto;" />
       </td>
     </tr>
 
@@ -286,12 +282,18 @@ export async function sendSessionAssignedEmail(data: SessionAssignedEmailData) {
     <!-- Footer -->
     <tr>
       <td style="background-color: #101012; padding: 30px 40px; text-align: center;">
-        <p style="color: #ffffff; margin: 0 0 10px 0; font-size: 16px; font-weight: 600;">
+        <p style="color: #ffffff; margin: 0 0 15px 0; font-size: 16px; font-weight: 600;">
           Grande Sports Training
         </p>
-        <p style="color: rgba(255,255,255,0.7); margin: 0 0 20px 0; font-size: 14px;">
-          Elite Soccer Development in Miami
-        </p>
+        <!-- Social Icons -->
+        <div style="margin: 0 0 20px 0;">
+          <a href="https://www.instagram.com/grandesportstraining/" target="_blank" style="display: inline-block; margin: 0 8px;">
+            <img src="https://cdn-icons-png.flaticon.com/512/174/174855.png" alt="Instagram" style="width: 28px; height: 28px;" />
+          </a>
+          <a href="https://www.tiktok.com/@grandesportstraining" target="_blank" style="display: inline-block; margin: 0 8px;">
+            <img src="https://cdn-icons-png.flaticon.com/512/3046/3046121.png" alt="TikTok" style="width: 28px; height: 28px;" />
+          </a>
+        </div>
         <p style="color: rgba(255,255,255,0.5); margin: 0; font-size: 12px;">
           Questions? Contact us at<br>
           td.grandesportstraining@gmail.com
@@ -323,7 +325,7 @@ View your sessions at: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard
 Questions? Contact us at td.grandesportstraining@gmail.com
 
 Grande Sports Training
-Elite Soccer Development in Miami
+Instagram: @grandesportstraining | TikTok: @grandesportstraining
   `
 
   try {
