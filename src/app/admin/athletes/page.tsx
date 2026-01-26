@@ -424,7 +424,9 @@ export default function AdminAthletesPage() {
                         <div className="flex items-center gap-2">
                           <h3 className="font-bold">{athlete.full_name}</h3>
                           {athlete.admin_notes && (
-                            <FileText size={14} className="text-orange-500" title="Has admin notes" />
+                            <span title="Has admin notes">
+                              <FileText size={14} className="text-orange-500" />
+                            </span>
                           )}
                         </div>
                         <p className="text-sm text-gs-gray-600">{athlete.email}</p>
