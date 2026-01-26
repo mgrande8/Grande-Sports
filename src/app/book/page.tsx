@@ -49,6 +49,23 @@ export default function BookPage() {
     fetchSessions()
   }, [selectedDate])
 
+  // Reset checkout loading state when page becomes visible (user clicked back from Stripe)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        setCheckoutLoading(false)
+      }
+    }
+
+    // Reset on mount (in case user navigated back)
+    setCheckoutLoading(false)
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [])
+
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser()
     setUser(user)
