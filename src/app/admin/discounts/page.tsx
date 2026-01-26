@@ -52,25 +52,32 @@ export default function AdminDiscountsPage() {
   }
 
   const fetchDiscounts = async () => {
-    const { data } = await supabase
-      .from('discount_codes')
-      .select('*')
-      .order('created_at', { ascending: false })
+    try {
+      const response = await fetch('/api/admin/discounts')
+      const data = await response.json()
 
-    if (data) {
-      setDiscounts(data)
+      if (data.discounts) {
+        setDiscounts(data.discounts)
+      }
+    } catch (error) {
+      console.error('Failed to fetch discounts:', error)
     }
   }
 
   const fetchAthletes = async () => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('id, full_name, email')
-      .eq('is_admin', false)
-      .order('full_name', { ascending: true })
+    try {
+      const response = await fetch('/api/admin/athletes')
+      const data = await response.json()
 
-    if (data) {
-      setAthletes(data)
+      if (data.athletes) {
+        setAthletes(data.athletes.map((a: any) => ({
+          id: a.id,
+          full_name: a.full_name,
+          email: a.email,
+        })))
+      }
+    } catch (error) {
+      console.error('Failed to fetch athletes:', error)
     }
   }
 

@@ -15,8 +15,11 @@ export async function POST(request: NextRequest) {
 
     const { sessionId, discountCodeId } = await request.json()
 
+    // Use service role client to bypass RLS for session lookup
+    const serviceClient = createServiceRoleClient()
+
     // Get session details
-    const { data: session, error: sessionError } = await supabase
+    const { data: session, error: sessionError } = await serviceClient
       .from('sessions')
       .select('*')
       .eq('id', sessionId)
@@ -24,6 +27,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (sessionError || !session) {
+      console.error('Session lookup error:', sessionError)
       return NextResponse.json({ error: 'Session not found' }, { status: 404 })
     }
 
@@ -32,8 +36,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Session is full' }, { status: 400 })
     }
 
-    // Check if already booked
-    const { data: existingBooking } = await supabase
+    // Check if already booked (use service client to bypass RLS)
+    const { data: existingBooking } = await serviceClient
       .from('bookings')
       .select('id')
       .eq('user_id', user.id)
@@ -50,8 +54,6 @@ export async function POST(request: NextRequest) {
     let discountAmount = 0
 
     if (discountCodeId) {
-      // Use service role client to bypass RLS for discount codes
-      const serviceClient = createServiceRoleClient()
       const { data: discount } = await serviceClient
         .from('discount_codes')
         .select('*')
@@ -67,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     // If the session is free (after discount), create booking directly without Stripe
     if (finalPrice === 0) {
-      const { error: bookingError } = await supabase
+      const { error: bookingError } = await serviceClient
         .from('bookings')
         .insert({
           user_id: user.id,
@@ -85,7 +87,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Get user profile for email
-      const { data: profile } = await supabase
+      const { data: profile } = await serviceClient
         .from('profiles')
         .select('email, full_name')
         .eq('id', user.id)
@@ -112,7 +114,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get or create Stripe customer
-    const { data: profile } = await supabase
+    const { data: profile } = await serviceClient
       .from('profiles')
       .select('stripe_customer_id, email, full_name')
       .eq('id', user.id)
@@ -128,7 +130,7 @@ export async function POST(request: NextRequest) {
       })
       stripeCustomerId = customer.id
 
-      await supabase
+      await serviceClient
         .from('profiles')
         .update({ stripe_customer_id: stripeCustomerId })
         .eq('id', user.id)

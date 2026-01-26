@@ -20,8 +20,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Payment method required' }, { status: 400 })
     }
 
+    // Use service role client to bypass RLS
+    const serviceClient = createServiceRoleClient()
+
     // Get session details
-    const { data: session, error: sessionError } = await supabase
+    const { data: session, error: sessionError } = await serviceClient
       .from('sessions')
       .select('*')
       .eq('id', sessionId)
@@ -29,6 +32,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (sessionError || !session) {
+      console.error('Session lookup error:', sessionError)
       return NextResponse.json({ error: 'Session not found' }, { status: 404 })
     }
 
@@ -38,7 +42,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if already booked
-    const { data: existingBooking } = await supabase
+    const { data: existingBooking } = await serviceClient
       .from('bookings')
       .select('id')
       .eq('user_id', user.id)
@@ -55,8 +59,6 @@ export async function POST(request: NextRequest) {
     let discountAmount = 0
 
     if (discountCodeId) {
-      // Use service role client to bypass RLS for discount codes
-      const serviceClient = createServiceRoleClient()
       const { data: discount } = await serviceClient
         .from('discount_codes')
         .select('*')
@@ -72,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     // If free, create booking directly
     if (finalPrice === 0) {
-      const { error: bookingError } = await supabase
+      const { error: bookingError } = await serviceClient
         .from('bookings')
         .insert({
           user_id: user.id,
@@ -85,11 +87,12 @@ export async function POST(request: NextRequest) {
         })
 
       if (bookingError) {
+        console.error('Booking error:', bookingError)
         return NextResponse.json({ error: 'Failed to create booking' }, { status: 500 })
       }
 
       // Get user profile for email
-      const { data: profile } = await supabase
+      const { data: profile } = await serviceClient
         .from('profiles')
         .select('email, full_name')
         .eq('id', user.id)
@@ -112,7 +115,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get customer ID
-    const { data: profile } = await supabase
+    const { data: profile } = await serviceClient
       .from('profiles')
       .select('stripe_customer_id')
       .eq('id', user.id)
@@ -141,7 +144,7 @@ export async function POST(request: NextRequest) {
 
     if (paymentIntent.status === 'succeeded') {
       // Create the booking
-      const { error: bookingError } = await supabase
+      const { error: bookingError } = await serviceClient
         .from('bookings')
         .insert({
           user_id: user.id,
@@ -161,7 +164,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Get user profile for email
-      const { data: userProfile } = await supabase
+      const { data: userProfile } = await serviceClient
         .from('profiles')
         .select('email, full_name')
         .eq('id', user.id)

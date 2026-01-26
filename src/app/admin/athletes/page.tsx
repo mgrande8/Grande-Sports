@@ -117,28 +117,15 @@ export default function AdminAthletesPage() {
   }
 
   const fetchAthletes = async () => {
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('is_admin', false)
-      .order('full_name', { ascending: true })
+    try {
+      const response = await fetch('/api/admin/athletes')
+      const data = await response.json()
 
-    if (profiles) {
-      const athletesWithStats = await Promise.all(
-        profiles.map(async (profile) => {
-          const { count } = await supabase
-            .from('bookings')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', profile.id)
-            .in('status', ['confirmed', 'completed'])
-
-          return {
-            ...profile,
-            total_sessions: count || 0,
-          }
-        })
-      )
-      setAthletes(athletesWithStats)
+      if (data.athletes) {
+        setAthletes(data.athletes)
+      }
+    } catch (error) {
+      console.error('Failed to fetch athletes:', error)
     }
   }
 
