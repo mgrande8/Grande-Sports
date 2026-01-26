@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supabase-server'
 import { sendSessionAssignedEmail } from '@/lib/email'
 import { formatDate, formatTime } from '@/lib/utils'
 
@@ -20,8 +20,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Session ID and Athlete ID are required' }, { status: 400 })
     }
 
+    // Use service role client to bypass RLS
+    const serviceClient = createServiceRoleClient()
+
     // Get session details
-    const { data: session, error: sessionError } = await supabase
+    const { data: session, error: sessionError } = await serviceClient
       .from('sessions')
       .select('*')
       .eq('id', sessionId)
@@ -29,11 +32,12 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (sessionError || !session) {
+      console.error('Session lookup error:', sessionError)
       return NextResponse.json({ error: 'Session not found' }, { status: 404 })
     }
 
     // Check if already booked
-    const { data: existingBooking } = await supabase
+    const { data: existingBooking } = await serviceClient
       .from('bookings')
       .select('id')
       .eq('user_id', athleteId)
@@ -51,18 +55,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Get athlete profile for email
-    const { data: athlete, error: athleteError } = await supabase
+    const { data: athlete, error: athleteError } = await serviceClient
       .from('profiles')
       .select('email, full_name')
       .eq('id', athleteId)
       .single()
 
     if (athleteError || !athlete) {
+      console.error('Athlete lookup error:', athleteError)
       return NextResponse.json({ error: 'Athlete not found' }, { status: 404 })
     }
 
     // Create booking on behalf of athlete
-    const { error: bookingError } = await supabase
+    const { error: bookingError } = await serviceClient
       .from('bookings')
       .insert({
         user_id: athleteId,

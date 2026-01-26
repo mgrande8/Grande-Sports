@@ -84,14 +84,15 @@ export default function AdminSessionsPage() {
   }
 
   const fetchAthletes = async () => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('is_admin', false)
-      .order('full_name', { ascending: true })
+    try {
+      const response = await fetch('/api/admin/athletes')
+      const data = await response.json()
 
-    if (data) {
-      setAthletes(data)
+      if (data.athletes) {
+        setAthletes(data.athletes)
+      }
+    } catch (error) {
+      console.error('Failed to fetch athletes:', error)
     }
   }
 
