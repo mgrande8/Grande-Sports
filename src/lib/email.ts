@@ -1,8 +1,10 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 const FROM_EMAIL = 'Grande Sports <noreply@grandesportstraining.com>'
+
+function getResendClient() {
+  return new Resend(process.env.RESEND_API_KEY)
+}
 
 interface BookingEmailData {
   to: string
@@ -161,7 +163,7 @@ Elite Soccer Development in Miami
   `
 
   try {
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResendClient().emails.send({
       from: FROM_EMAIL,
       to: [to],
       subject: `Booking Confirmed: ${sessionTitle} on ${sessionDate}`,
@@ -325,7 +327,7 @@ Elite Soccer Development in Miami
   `
 
   try {
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResendClient().emails.send({
       from: FROM_EMAIL,
       to: [to],
       subject: `Session Assigned: ${sessionTitle} on ${sessionDate}`,
