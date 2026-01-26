@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
         .single()
 
       if (discount) {
-        finalPrice = calculateDiscountedPrice(session.price, discount.type, discount.value)
+        finalPrice = calculateDiscountedPrice(session.price, discount.discount_type, discount.discount_value)
         discountAmount = session.price - finalPrice
       }
     }

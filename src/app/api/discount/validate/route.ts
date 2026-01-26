@@ -41,13 +41,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Return the discount info (but not sensitive data)
+    // Map database column names to frontend expected names
     return NextResponse.json({
       success: true,
       discount: {
         id: discount.id,
         code: discount.code,
-        type: discount.type,
-        value: discount.value,
+        type: discount.discount_type,
+        value: discount.discount_value,
       }
     })
   } catch (error: any) {

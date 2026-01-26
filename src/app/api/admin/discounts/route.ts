@@ -25,7 +25,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch discounts' }, { status: 500 })
     }
 
-    return NextResponse.json({ discounts: data || [] })
+    // Map database column names to frontend expected names
+    const mappedDiscounts = (data || []).map(d => ({
+      ...d,
+      type: d.discount_type,
+      value: d.discount_value,
+    }))
+
+    return NextResponse.json({ discounts: mappedDiscounts })
   } catch (error: any) {
     console.error('Admin discounts error:', error)
     return NextResponse.json({ error: 'Failed to fetch discounts' }, { status: 500 })
@@ -45,10 +52,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
 
     // Ensure all required fields are present with defaults
+    // Note: Database uses discount_type and discount_value column names
     const discountData = {
       code: body.code,
-      type: body.type,
-      value: body.value || 0,
+      discount_type: body.type,
+      discount_value: body.value || 0,
+      max_uses: null,
       valid_until: body.valid_until || null,
       athlete_id: body.athlete_id || null,
       is_active: true,
