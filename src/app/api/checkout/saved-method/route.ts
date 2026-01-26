@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supabase-server'
 import { stripe } from '@/lib/stripe'
 import { calculateDiscountedPrice, formatDate, formatTime } from '@/lib/utils'
 import { sendBookingConfirmationEmail } from '@/lib/email'
@@ -55,7 +55,9 @@ export async function POST(request: NextRequest) {
     let discountAmount = 0
 
     if (discountCodeId) {
-      const { data: discount } = await supabase
+      // Use service role client to bypass RLS for discount codes
+      const serviceClient = createServiceRoleClient()
+      const { data: discount } = await serviceClient
         .from('discount_codes')
         .select('*')
         .eq('id', discountCodeId)

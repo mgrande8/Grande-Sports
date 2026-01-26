@@ -92,44 +92,31 @@ export default function BookPage() {
     if (!discountCode.trim()) return
 
     setDiscountError('')
-    const { data, error } = await supabase
-      .from('discount_codes')
-      .select('*')
-      .eq('code', discountCode.toUpperCase())
-      .eq('is_active', true)
-      .single()
 
-    if (error || !data) {
-      setDiscountError('Invalid discount code')
-      setDiscountApplied(null)
-      return
-    }
+    try {
+      const response = await fetch('/api/discount/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: discountCode }),
+      })
 
-    // Check validity dates
-    const now = new Date()
-    if (data.valid_from && new Date(data.valid_from) > now) {
-      setDiscountError('This discount code is not yet valid')
-      setDiscountApplied(null)
-      return
-    }
-    if (data.valid_until && new Date(data.valid_until) < now) {
-      setDiscountError('This discount code has expired')
-      setDiscountApplied(null)
-      return
-    }
+      const data = await response.json()
 
-    // Check if athlete-specific
-    if (data.athlete_id && user && data.athlete_id !== user.id) {
-      setDiscountError('This discount code is not available for your account')
-      setDiscountApplied(null)
-      return
-    }
+      if (!response.ok) {
+        setDiscountError(data.error || 'Invalid discount code')
+        setDiscountApplied(null)
+        return
+      }
 
-    setDiscountApplied({
-      type: data.type,
-      value: data.value,
-      id: data.id,
-    })
+      setDiscountApplied({
+        type: data.discount.type,
+        value: data.discount.value,
+        id: data.discount.id,
+      })
+    } catch (error) {
+      setDiscountError('Failed to validate discount code')
+      setDiscountApplied(null)
+    }
   }
 
   const getFinalPrice = () => {
