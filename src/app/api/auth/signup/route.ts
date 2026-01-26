@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
     const { data: linkData, error: linkError } = await serviceClient.auth.admin.generateLink({
       type: 'signup',
       email: email.toLowerCase(),
+      password: password,
       options: {
         redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
       },
