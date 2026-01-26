@@ -143,16 +143,15 @@ export default function AdminAthletesPage() {
   }
 
   const fetchSessions = async () => {
-    const { data } = await supabase
-      .from('sessions')
-      .select('*')
-      .eq('is_active', true)
-      .gte('date', format(new Date(), 'yyyy-MM-dd'))
-      .order('date', { ascending: true })
-      .order('start_time', { ascending: true })
+    try {
+      const response = await fetch('/api/sessions')
+      const data = await response.json()
 
-    if (data) {
-      setSessions(data)
+      if (data.sessions) {
+        setSessions(data.sessions)
+      }
+    } catch (error) {
+      console.error('Failed to fetch sessions:', error)
     }
   }
 

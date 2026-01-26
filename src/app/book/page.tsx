@@ -75,15 +75,15 @@ export default function BookPage() {
     setLoading(true)
     const dateStr = format(selectedDate, 'yyyy-MM-dd')
 
-    const { data, error } = await supabase
-      .from('sessions')
-      .select('*')
-      .eq('date', dateStr)
-      .eq('is_active', true)
-      .order('start_time', { ascending: true })
+    try {
+      const response = await fetch(`/api/sessions?date=${dateStr}`)
+      const data = await response.json()
 
-    if (!error && data) {
-      setSessions(data)
+      if (data.sessions) {
+        setSessions(data.sessions)
+      }
+    } catch (error) {
+      console.error('Failed to fetch sessions:', error)
     }
     setLoading(false)
   }

@@ -62,12 +62,15 @@ export default function AdminPage() {
       .select('*', { count: 'exact', head: true })
       .eq('is_admin', false)
 
-    // Upcoming sessions
-    const { count: sessionCount } = await supabase
-      .from('sessions')
-      .select('*', { count: 'exact', head: true })
-      .gte('date', format(new Date(), 'yyyy-MM-dd'))
-      .eq('is_active', true)
+    // Upcoming sessions - use API to bypass RLS
+    let sessionCount = 0
+    try {
+      const response = await fetch('/api/sessions')
+      const data = await response.json()
+      sessionCount = data.sessions?.length || 0
+    } catch (error) {
+      console.error('Failed to fetch sessions count:', error)
+    }
 
     // Monthly revenue
     const monthStart = format(startOfMonth(new Date()), 'yyyy-MM-dd')
