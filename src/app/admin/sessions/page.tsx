@@ -107,76 +107,86 @@ export default function AdminSessionsPage() {
       notes: formData.notes || null,
     }
 
-    if (editingSession) {
-      // Update existing session
-      const { error } = await supabase
-        .from('sessions')
-        .update({
-          ...baseSessionData,
-          date: formData.date,
-        })
-        .eq('id', editingSession.id)
-
-      if (error) {
-        alert('Failed to update session')
-        return
-      }
-    } else if (formData.is_recurring) {
-      // Create recurring sessions
-      const sessionsToCreate = []
-      let currentDate = new Date(formData.date)
-      const endDate = new Date(formData.recurrence_end_date)
-
-      // Adjust to the correct day of week
-      while (getDay(currentDate) !== formData.recurrence_day) {
-        currentDate = addDays(currentDate, 1)
-      }
-
-      // Generate sessions for each week until end date
-      while (currentDate <= endDate) {
-        sessionsToCreate.push({
-          ...baseSessionData,
-          date: format(currentDate, 'yyyy-MM-dd'),
-          is_recurring: true,
-          recurrence_day: formData.recurrence_day,
-        })
-        currentDate = addWeeks(currentDate, 1)
-      }
-
-      if (sessionsToCreate.length === 0) {
-        alert('No sessions to create. Check your date range.')
-        return
-      }
-
-      const { error } = await supabase
-        .from('sessions')
-        .insert(sessionsToCreate)
-
-      if (error) {
-        alert('Failed to create recurring sessions')
-        return
-      }
-
-      alert(`Created ${sessionsToCreate.length} recurring sessions!`)
-    } else {
-      // Create single session
-      const { error } = await supabase
-        .from('sessions')
-        .insert({
-          ...baseSessionData,
-          date: formData.date,
+    try {
+      if (editingSession) {
+        // Update existing session via API
+        const response = await fetch('/api/admin/sessions', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: editingSession.id,
+            ...baseSessionData,
+            date: formData.date,
+          }),
         })
 
-      if (error) {
-        alert('Failed to create session')
-        return
+        if (!response.ok) {
+          const data = await response.json()
+          alert(data.error || 'Failed to update session')
+          return
+        }
+      } else if (formData.is_recurring) {
+        // Create recurring sessions
+        const sessionsToCreate = []
+        let currentDate = new Date(formData.date)
+        const endDate = new Date(formData.recurrence_end_date)
+
+        // Adjust to the correct day of week
+        while (getDay(currentDate) !== formData.recurrence_day) {
+          currentDate = addDays(currentDate, 1)
+        }
+
+        // Generate sessions for each week until end date
+        while (currentDate <= endDate) {
+          sessionsToCreate.push({
+            ...baseSessionData,
+            date: format(currentDate, 'yyyy-MM-dd'),
+            is_recurring: true,
+            recurrence_day: formData.recurrence_day,
+          })
+          currentDate = addWeeks(currentDate, 1)
+        }
+
+        if (sessionsToCreate.length === 0) {
+          alert('No sessions to create. Check your date range.')
+          return
+        }
+
+        const response = await fetch('/api/admin/sessions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessions: sessionsToCreate }),
+        })
+
+        if (!response.ok) {
+          const data = await response.json()
+          alert(data.error || 'Failed to create recurring sessions')
+          return
+        }
+
+        alert(`Created ${sessionsToCreate.length} recurring sessions!`)
+      } else {
+        // Create single session via API
+        const response = await fetch('/api/admin/sessions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessions: [{ ...baseSessionData, date: formData.date }] }),
+        })
+
+        if (!response.ok) {
+          const data = await response.json()
+          alert(data.error || 'Failed to create session')
+          return
+        }
       }
+
+      setShowModal(false)
+      setEditingSession(null)
+      resetForm()
+      await fetchSessions()
+    } catch (error) {
+      alert('Failed to save session')
     }
-
-    setShowModal(false)
-    setEditingSession(null)
-    resetForm()
-    await fetchSessions()
   }
 
   const handleEdit = (session: Session) => {
@@ -201,15 +211,20 @@ export default function AdminSessionsPage() {
       return
     }
 
-    const { error } = await supabase
-      .from('sessions')
-      .update({ is_active: false })
-      .eq('id', session.id)
+    try {
+      const response = await fetch('/api/admin/sessions', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: session.id }),
+      })
 
-    if (error) {
+      if (!response.ok) {
+        alert('Failed to delete session')
+      } else {
+        await fetchSessions()
+      }
+    } catch (error) {
       alert('Failed to delete session')
-    } else {
-      await fetchSessions()
     }
   }
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supabase-server'
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,8 +22,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email and name are required' }, { status: 400 })
     }
 
+    // Use service role client for admin operations
+    const serviceClient = createServiceRoleClient()
+
     // Check if email already exists
-    const { data: existingProfile } = await supabase
+    const { data: existingProfile } = await serviceClient
       .from('profiles')
       .select('id')
       .eq('email', email.toLowerCase())
@@ -35,7 +38,7 @@ export async function POST(request: NextRequest) {
 
     // Use Supabase Admin API to invite user
     // This sends an email invitation to the user
-    const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
+    const { data: inviteData, error: inviteError } = await serviceClient.auth.admin.inviteUserByEmail(email, {
       data: {
         full_name: full_name,
         phone: phone || null,
@@ -47,7 +50,7 @@ export async function POST(request: NextRequest) {
 
       // If admin API not available, create profile directly (user will need to sign up)
       // This is a fallback for when service role key doesn't have admin access
-      const { error: profileError } = await supabase
+      const { error: profileError } = await serviceClient
         .from('profiles')
         .insert({
           id: crypto.randomUUID(),

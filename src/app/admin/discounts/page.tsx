@@ -94,35 +94,40 @@ export default function AdminDiscountsPage() {
       athlete_id: formData.athlete_id || null,
     }
 
-    if (editingDiscount) {
-      const { error } = await supabase
-        .from('discount_codes')
-        .update(discountData)
-        .eq('id', editingDiscount.id)
+    try {
+      if (editingDiscount) {
+        const response = await fetch('/api/admin/discounts', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: editingDiscount.id, ...discountData }),
+        })
 
-      if (error) {
-        alert('Failed to update discount code')
-        return
-      }
-    } else {
-      const { error } = await supabase
-        .from('discount_codes')
-        .insert(discountData)
-
-      if (error) {
-        if (error.code === '23505') {
-          alert('A discount code with this name already exists')
-        } else {
-          alert('Failed to create discount code')
+        if (!response.ok) {
+          const data = await response.json()
+          alert(data.error || 'Failed to update discount code')
+          return
         }
-        return
-      }
-    }
+      } else {
+        const response = await fetch('/api/admin/discounts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(discountData),
+        })
 
-    setShowModal(false)
-    setEditingDiscount(null)
-    resetForm()
-    await fetchDiscounts()
+        if (!response.ok) {
+          const data = await response.json()
+          alert(data.error || 'Failed to create discount code')
+          return
+        }
+      }
+
+      setShowModal(false)
+      setEditingDiscount(null)
+      resetForm()
+      await fetchDiscounts()
+    } catch (error) {
+      alert('Failed to save discount code')
+    }
   }
 
   const handleEdit = (discount: DiscountCode) => {
@@ -140,10 +145,19 @@ export default function AdminDiscountsPage() {
   const handleDelete = async (discount: DiscountCode) => {
     if (!confirm(`Delete code "${discount.code}"?`)) return
 
-    await supabase
-      .from('discount_codes')
-      .update({ is_active: false })
-      .eq('id', discount.id)
+    try {
+      const response = await fetch('/api/admin/discounts', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: discount.id }),
+      })
+
+      if (!response.ok) {
+        alert('Failed to delete discount code')
+      }
+    } catch (error) {
+      alert('Failed to delete discount code')
+    }
 
     await fetchDiscounts()
   }
