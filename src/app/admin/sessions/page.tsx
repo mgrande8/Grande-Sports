@@ -36,7 +36,7 @@ export default function AdminSessionsPage() {
     date: format(new Date(), 'yyyy-MM-dd'),
     start_time: '10:00',
     end_time: '11:00',
-    location: 'Miami Shores Park',
+    location: 'Bamford Park (Davie)',
     notes: '',
     is_recurring: false,
     recurrence_day: getDay(new Date()),
@@ -273,7 +273,7 @@ export default function AdminSessionsPage() {
       date: format(new Date(), 'yyyy-MM-dd'),
       start_time: '10:00',
       end_time: '11:00',
-      location: 'Miami Shores Park',
+      location: 'Bamford Park (Davie)',
       notes: '',
       is_recurring: false,
       recurrence_day: getDay(new Date()),
@@ -572,7 +572,7 @@ export default function AdminSessionsPage() {
                     value={formData.location}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                     className="input-field"
-                    placeholder="Miami Shores Park"
+                    placeholder="Bamford Park (Davie)"
                   />
                 </div>
 
