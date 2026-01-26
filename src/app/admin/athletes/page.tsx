@@ -28,6 +28,7 @@ export default function AdminAthletesPage() {
     full_name: '',
     email: '',
     phone: '',
+    password: '',
   })
   const [adding, setAdding] = useState(false)
 
@@ -174,7 +175,7 @@ export default function AdminAthletesPage() {
       } else {
         alert(data.message)
         setShowAddModal(false)
-        setAddForm({ full_name: '', email: '', phone: '' })
+        setAddForm({ full_name: '', email: '', phone: '', password: '' })
         await fetchAthletes()
       }
     } catch (error) {
@@ -537,9 +538,25 @@ export default function AdminAthletesPage() {
                   />
                 </div>
 
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    The athlete will receive an email invitation to set up their account and manage their payment information.
+                <div>
+                  <label className="block text-sm font-medium text-gs-gray-700 mb-1">
+                    Password (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={addForm.password}
+                    onChange={(e) => setAddForm({ ...addForm, password: e.target.value })}
+                    className="input-field"
+                    placeholder="Leave blank for default: GrandeSports123!"
+                  />
+                  <p className="text-xs text-gs-gray-500 mt-1">
+                    If left blank, the default password will be: GrandeSports123!
+                  </p>
+                </div>
+
+                <div className="bg-green-50 p-3 rounded-lg">
+                  <p className="text-sm text-green-800">
+                    The athlete will be added directly and can log in immediately with their email and password. No confirmation email will be sent.
                   </p>
                 </div>
 

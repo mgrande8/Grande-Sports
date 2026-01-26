@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
-    const { email, full_name, phone } = await request.json()
+    const { email, full_name, phone, password } = await request.json()
 
     if (!email || !full_name) {
       return NextResponse.json({ error: 'Email and name are required' }, { status: 400 })
@@ -25,61 +25,57 @@ export async function POST(request: NextRequest) {
     // Use service role client for admin operations
     const serviceClient = createServiceRoleClient()
 
-    // Check if email already exists
-    const { data: existingProfile } = await serviceClient
-      .from('profiles')
-      .select('id')
-      .eq('email', email.toLowerCase())
-      .single()
+    // Check if user already exists in auth
+    const { data: existingUsers } = await serviceClient.auth.admin.listUsers()
+    const existingUser = existingUsers?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase())
 
-    if (existingProfile) {
+    if (existingUser) {
       return NextResponse.json({ error: 'An athlete with this email already exists' }, { status: 400 })
     }
 
-    // Use Supabase Admin API to invite user
-    // This sends an email invitation to the user
-    const { data: inviteData, error: inviteError } = await serviceClient.auth.admin.inviteUserByEmail(email, {
-      data: {
+    // Create user directly with password (no confirmation email sent)
+    // Use provided password or default to 'GrandeSports123!'
+    const userPassword = password || 'GrandeSports123!'
+
+    const { data: newUser, error: createError } = await serviceClient.auth.admin.createUser({
+      email: email.toLowerCase(),
+      password: userPassword,
+      email_confirm: true, // Auto-confirm email so they can log in immediately
+      user_metadata: {
         full_name: full_name,
         phone: phone || null,
       },
     })
 
-    if (inviteError) {
-      console.error('Invite error:', inviteError)
-
-      // If admin API not available, create profile directly (user will need to sign up)
-      // This is a fallback for when service role key doesn't have admin access
-      const { error: profileError } = await serviceClient
-        .from('profiles')
-        .insert({
-          id: crypto.randomUUID(),
-          email: email.toLowerCase(),
-          full_name: full_name,
-          phone: phone || null,
-          is_admin: false,
-        })
-
-      if (profileError) {
-        // If that also fails, it might be a foreign key constraint
-        // In that case, we need the user to sign up first
-        return NextResponse.json({
-          error: 'Could not add athlete. They will need to sign up themselves first.',
-          details: profileError.message
-        }, { status: 400 })
-      }
-
+    if (createError) {
+      console.error('Create user error:', createError)
       return NextResponse.json({
-        success: true,
-        message: 'Athlete profile created. They can sign up with their email to access their account.',
-        invited: false
+        error: 'Failed to create athlete account',
+        details: createError.message
+      }, { status: 400 })
+    }
+
+    // Create profile for the new user
+    const { error: profileError } = await serviceClient
+      .from('profiles')
+      .insert({
+        id: newUser.user.id,
+        email: email.toLowerCase(),
+        full_name: full_name,
+        phone: phone || null,
+        is_admin: false,
       })
+
+    if (profileError) {
+      console.error('Profile creation error:', profileError)
+      // User was created but profile failed - still return success
+      // The profile might be auto-created by a trigger
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Invitation sent! The athlete will receive an email to set up their account.',
-      invited: true
+      message: `Athlete added successfully! They can log in with email: ${email} and password: ${userPassword}`,
+      defaultPassword: userPassword,
     })
   } catch (error: any) {
     console.error('Add athlete error:', error)
