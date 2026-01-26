@@ -342,15 +342,21 @@ export default function AdminAthletesPage() {
       notes: testForm.notes || null,
     }
 
-    const { error } = await supabase
-      .from('technical_tests')
-      .insert(testData)
+    try {
+      const response = await fetch('/api/admin/tests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(testData),
+      })
 
-    if (error) {
+      if (!response.ok) {
+        alert('Failed to save test results')
+      } else {
+        alert('Test results saved successfully!')
+        setShowTestModal(false)
+      }
+    } catch (error) {
       alert('Failed to save test results')
-    } else {
-      alert('Test results saved successfully!')
-      setShowTestModal(false)
     }
   }
 
