@@ -7,9 +7,9 @@ import Header from '@/components/Header'
 import { PageLoader } from '@/components/LoadingSpinner'
 import { Session, User, PRICING, SESSION_CAPACITY } from '@/lib/types'
 import { formatDate, formatTime, formatCurrency, getSessionTypeLabel, getSessionTypeColor, cn } from '@/lib/utils'
-import { ArrowLeft, Plus, Calendar, Users, Trash2, Edit, X, UserPlus, Repeat } from 'lucide-react'
+import { ArrowLeft, Plus, Calendar, Users, Trash2, Edit, X, UserPlus, Repeat, List, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react'
 import Link from 'next/link'
-import { format, addDays, addWeeks, getDay } from 'date-fns'
+import { format, addDays, addWeeks, getDay, startOfMonth, endOfMonth, startOfWeek, endOfWeek, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns'
 
 const DAYS_OF_WEEK = [
   { value: 0, label: 'Sunday' },
@@ -30,6 +30,9 @@ export default function AdminSessionsPage() {
   const [assigningSession, setAssigningSession] = useState<Session | null>(null)
   const [selectedAthleteId, setSelectedAthleteId] = useState<string>('')
   const [editingSession, setEditingSession] = useState<Session | null>(null)
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list')
+  const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [formData, setFormData] = useState({
     title: '',
     session_type: 'group' as 'private' | 'semi-private' | 'group',
@@ -300,6 +303,31 @@ export default function AdminSessionsPage() {
     return acc
   }, {} as Record<string, Session[]>)
 
+  // Calendar helpers
+  const getCalendarDays = () => {
+    const start = startOfWeek(startOfMonth(currentMonth))
+    const end = endOfWeek(endOfMonth(currentMonth))
+    const days = []
+    let day = start
+    while (day <= end) {
+      days.push(day)
+      day = addDays(day, 1)
+    }
+    return days
+  }
+
+  const getSessionsForDate = (date: Date) => {
+    const dateStr = format(date, 'yyyy-MM-dd')
+    return sessionsByDate[dateStr] || []
+  }
+
+  const getSessionCountColor = (count: number) => {
+    if (count === 0) return ''
+    if (count === 1) return 'bg-green-100 text-green-800'
+    if (count === 2) return 'bg-blue-100 text-blue-800'
+    return 'bg-purple-100 text-purple-800'
+  }
+
   return (
     <div className="min-h-screen bg-gs-gray-100">
       <Header />
@@ -316,14 +344,176 @@ export default function AdminSessionsPage() {
               <h1 className="text-3xl font-bold">Manage Sessions</h1>
               <p className="text-gs-gray-600">Create and manage training sessions</p>
             </div>
-            <button onClick={openCreateModal} className="btn-green flex items-center gap-2">
-              <Plus size={20} />
-              Create Session
-            </button>
+            <div className="flex items-center gap-3">
+              {/* View Toggle */}
+              <div className="flex bg-white rounded-lg border border-gs-gray-200 p-1">
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={cn(
+                    "px-3 py-1.5 rounded-md flex items-center gap-1.5 text-sm font-medium transition-colors",
+                    viewMode === 'list' ? 'bg-gs-green text-white' : 'text-gs-gray-600 hover:bg-gs-gray-100'
+                  )}
+                >
+                  <List size={16} />
+                  List
+                </button>
+                <button
+                  onClick={() => setViewMode('calendar')}
+                  className={cn(
+                    "px-3 py-1.5 rounded-md flex items-center gap-1.5 text-sm font-medium transition-colors",
+                    viewMode === 'calendar' ? 'bg-gs-green text-white' : 'text-gs-gray-600 hover:bg-gs-gray-100'
+                  )}
+                >
+                  <CalendarDays size={16} />
+                  Calendar
+                </button>
+              </div>
+              <button onClick={openCreateModal} className="btn-green flex items-center gap-2">
+                <Plus size={20} />
+                Create Session
+              </button>
+            </div>
           </div>
 
-          {/* Sessions List */}
-          {Object.keys(sessionsByDate).length === 0 ? (
+          {/* Calendar View */}
+          {viewMode === 'calendar' && (
+            <div className="card mb-6">
+              {/* Month Navigation */}
+              <div className="flex items-center justify-between mb-6">
+                <button
+                  onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+                  className="p-2 hover:bg-gs-gray-100 rounded-lg transition-colors"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <h2 className="text-xl font-bold">
+                  {format(currentMonth, 'MMMM yyyy')}
+                </h2>
+                <button
+                  onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+                  className="p-2 hover:bg-gs-gray-100 rounded-lg transition-colors"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+
+              {/* Calendar Grid */}
+              <div className="grid grid-cols-7 gap-1">
+                {/* Day Headers */}
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                  <div key={day} className="text-center text-sm font-semibold text-gs-gray-600 py-2">
+                    {day}
+                  </div>
+                ))}
+
+                {/* Calendar Days */}
+                {getCalendarDays().map((day, index) => {
+                  const daySessions = getSessionsForDate(day)
+                  const isCurrentMonth = isSameMonth(day, currentMonth)
+                  const isToday = isSameDay(day, new Date())
+                  const isSelected = selectedDate && isSameDay(day, selectedDate)
+
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedDate(day)}
+                      className={cn(
+                        "min-h-[80px] p-2 border rounded-lg text-left transition-colors",
+                        isCurrentMonth ? 'bg-white' : 'bg-gs-gray-50',
+                        isToday && 'ring-2 ring-gs-green',
+                        isSelected && 'border-gs-green border-2',
+                        !isSelected && 'border-gs-gray-200 hover:border-gs-gray-300'
+                      )}
+                    >
+                      <div className={cn(
+                        "text-sm font-medium mb-1",
+                        !isCurrentMonth && 'text-gs-gray-400',
+                        isToday && 'text-gs-green'
+                      )}>
+                        {format(day, 'd')}
+                      </div>
+                      {daySessions.length > 0 && (
+                        <div className={cn(
+                          "text-xs font-semibold px-1.5 py-0.5 rounded",
+                          getSessionCountColor(daySessions.length)
+                        )}>
+                          {daySessions.length} session{daySessions.length > 1 ? 's' : ''}
+                        </div>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Selected Date Sessions */}
+              {selectedDate && (
+                <div className="mt-6 pt-6 border-t border-gs-gray-200">
+                  <h3 className="font-bold text-lg mb-4">
+                    {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+                  </h3>
+                  {getSessionsForDate(selectedDate).length === 0 ? (
+                    <p className="text-gs-gray-500 text-center py-4">No sessions on this date</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {getSessionsForDate(selectedDate).map((session) => (
+                        <div key={session.id} className="bg-gs-gray-50 rounded-lg p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className={cn(
+                                  "px-2 py-0.5 text-xs font-semibold rounded-full",
+                                  getSessionTypeColor(session.session_type)
+                                )}>
+                                  {getSessionTypeLabel(session.session_type)}
+                                </span>
+                                <span className="text-sm text-gs-gray-600">
+                                  {formatCurrency(session.price)}
+                                </span>
+                              </div>
+                              <h4 className="font-semibold">{session.title}</h4>
+                              <p className="text-sm text-gs-gray-600">
+                                {formatTime(session.start_time)} - {formatTime(session.end_time)} • {session.location}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-gs-gray-600">
+                                {session.current_capacity}/{session.max_capacity}
+                              </span>
+                              <button
+                                onClick={() => openAssignModal(session)}
+                                className="p-2 text-gs-green hover:bg-green-50 rounded"
+                                title="Assign"
+                              >
+                                <UserPlus size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleEdit(session)}
+                                className="p-2 text-gs-gray-600 hover:bg-gs-gray-100 rounded"
+                                title="Edit"
+                              >
+                                <Edit size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(session)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded"
+                                title="Delete"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* List View */}
+          {viewMode === 'list' && (
+            Object.keys(sessionsByDate).length === 0 ? (
             <div className="card text-center py-12">
               <Calendar className="mx-auto text-gs-gray-400 mb-4" size={48} />
               <h2 className="text-xl font-bold mb-2">No Upcoming Sessions</h2>
@@ -404,6 +594,7 @@ export default function AdminSessionsPage() {
                 </div>
               ))}
             </div>
+          )
           )}
         </div>
       </main>
