@@ -41,7 +41,7 @@ export default function AdminSessionsPage() {
     end_time: '11:00',
     location: 'Bamford Park (Davie)',
     notes: '',
-    coach_name: 'Coach Miguel',
+    coach_name: '',
     is_recurring: false,
     recurrence_day: getDay(new Date()),
     recurrence_end_date: format(addWeeks(new Date(), 8), 'yyyy-MM-dd'),
@@ -109,7 +109,7 @@ export default function AdminSessionsPage() {
       max_capacity: SESSION_CAPACITY[formData.session_type],
       location: formData.location,
       notes: formData.notes || null,
-      coach_name: formData.coach_name,
+      coach_name: formData.coach_name || null,
     }
 
     try {
@@ -204,7 +204,7 @@ export default function AdminSessionsPage() {
       end_time: session.end_time,
       location: session.location,
       notes: session.notes || '',
-      coach_name: session.coach_name || 'Coach Miguel',
+      coach_name: session.coach_name || '',
       is_recurring: false,
       recurrence_day: getDay(new Date(session.date)),
       recurrence_end_date: format(addWeeks(new Date(), 8), 'yyyy-MM-dd'),
@@ -282,7 +282,7 @@ export default function AdminSessionsPage() {
       end_time: '11:00',
       location: 'Bamford Park (Davie)',
       notes: '',
-      coach_name: 'Coach Miguel',
+      coach_name: '',
       is_recurring: false,
       recurrence_day: getDay(new Date()),
       recurrence_end_date: format(addWeeks(new Date(), 8), 'yyyy-MM-dd'),
@@ -656,13 +656,15 @@ export default function AdminSessionsPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gs-gray-700 mb-1">
-                    Coach
+                    Coach *
                   </label>
                   <select
                     value={formData.coach_name}
                     onChange={(e) => setFormData({ ...formData, coach_name: e.target.value })}
                     className="input-field"
+                    required
                   >
+                    <option value="">Select coach...</option>
                     <option value="Coach Miguel">Coach Miguel</option>
                     <option value="Coach Fabian">Coach Fabian</option>
                   </select>

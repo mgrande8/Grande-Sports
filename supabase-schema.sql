@@ -33,7 +33,7 @@ CREATE TABLE public.sessions (
   current_capacity INTEGER NOT NULL DEFAULT 0,
   location TEXT DEFAULT 'Miami Shores Park',
   notes TEXT,
-  coach_name TEXT DEFAULT 'Coach Miguel',
+  coach_name TEXT,
   is_active BOOLEAN DEFAULT TRUE,
   is_recurring BOOLEAN DEFAULT FALSE,
   recurrence_day INTEGER, -- 0 = Sunday, 1 = Monday, etc.
