@@ -109,6 +109,7 @@ export async function POST(request: NextRequest) {
           sessionTime: formatTime(session.start_time),
           sessionLocation: session.location || 'Bamford Park (Davie)',
           amountPaid: 0,
+          coachName: session.coach_name || undefined,
         })
       }
 
@@ -153,7 +154,7 @@ export async function POST(request: NextRequest) {
             currency: 'usd',
             product_data: {
               name: session.title,
-              description: `${session.date} at ${session.start_time}`,
+              description: `${session.date} at ${session.start_time}${session.coach_name ? ` with ${session.coach_name}` : ''}`,
             },
             unit_amount: Math.round(finalPrice * 100),
           },

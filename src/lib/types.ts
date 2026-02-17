@@ -26,6 +26,7 @@ export interface Session {
   current_capacity: number
   location: string
   notes?: string
+  coach_name?: string
   is_active: boolean
   created_at: string
   // Recurring session fields

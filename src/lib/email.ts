@@ -14,10 +14,11 @@ interface BookingEmailData {
   sessionTime: string
   sessionLocation: string
   amountPaid: number
+  coachName?: string
 }
 
 export async function sendBookingConfirmationEmail(data: BookingEmailData) {
-  const { to, athleteName, sessionTitle, sessionDate, sessionTime, sessionLocation, amountPaid } = data
+  const { to, athleteName, sessionTitle, sessionDate, sessionTime, sessionLocation, amountPaid, coachName } = data
 
   const html = `
 <!DOCTYPE html>
@@ -64,6 +65,12 @@ export async function sendBookingConfirmationEmail(data: BookingEmailData) {
               <td style="padding: 8px 0; color: #666666; font-size: 14px; width: 100px;">Session</td>
               <td style="padding: 8px 0; color: #101012; font-size: 14px; font-weight: 500;">${sessionTitle}</td>
             </tr>
+            ${coachName ? `
+            <tr>
+              <td style="padding: 8px 0; color: #666666; font-size: 14px;">Coach</td>
+              <td style="padding: 8px 0; color: #101012; font-size: 14px; font-weight: 500;">${coachName}</td>
+            </tr>
+            ` : ''}
             <tr>
               <td style="padding: 8px 0; color: #666666; font-size: 14px;">Date</td>
               <td style="padding: 8px 0; color: #101012; font-size: 14px; font-weight: 500;">${sessionDate}</td>
@@ -147,7 +154,7 @@ Hi ${athleteName},
 Your training session has been booked successfully.
 
 SESSION DETAILS:
-- Session: ${sessionTitle}
+- Session: ${sessionTitle}${coachName ? `\n- Coach: ${coachName}` : ''}
 - Date: ${sessionDate}
 - Time: ${sessionTime}
 - Location: ${sessionLocation}
@@ -191,10 +198,11 @@ interface SessionAssignedEmailData {
   sessionDate: string
   sessionTime: string
   sessionLocation: string
+  coachName?: string
 }
 
 export async function sendSessionAssignedEmail(data: SessionAssignedEmailData) {
-  const { to, athleteName, sessionTitle, sessionDate, sessionTime, sessionLocation } = data
+  const { to, athleteName, sessionTitle, sessionDate, sessionTime, sessionLocation, coachName } = data
 
   const html = `
 <!DOCTYPE html>
@@ -241,6 +249,12 @@ export async function sendSessionAssignedEmail(data: SessionAssignedEmailData) {
               <td style="padding: 8px 0; color: #666666; font-size: 14px; width: 100px;">Session</td>
               <td style="padding: 8px 0; color: #101012; font-size: 14px; font-weight: 500;">${sessionTitle}</td>
             </tr>
+            ${coachName ? `
+            <tr>
+              <td style="padding: 8px 0; color: #666666; font-size: 14px;">Coach</td>
+              <td style="padding: 8px 0; color: #101012; font-size: 14px; font-weight: 500;">${coachName}</td>
+            </tr>
+            ` : ''}
             <tr>
               <td style="padding: 8px 0; color: #666666; font-size: 14px;">Date</td>
               <td style="padding: 8px 0; color: #101012; font-size: 14px; font-weight: 500;">${sessionDate}</td>
@@ -313,7 +327,7 @@ Hi ${athleteName},
 You've been assigned to a training session.
 
 SESSION DETAILS:
-- Session: ${sessionTitle}
+- Session: ${sessionTitle}${coachName ? `\n- Coach: ${coachName}` : ''}
 - Date: ${sessionDate}
 - Time: ${sessionTime}
 - Location: ${sessionLocation}

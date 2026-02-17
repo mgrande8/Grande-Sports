@@ -114,6 +114,7 @@ export async function POST(request: NextRequest) {
           sessionTime: formatTime(session.start_time),
           sessionLocation: session.location || 'Bamford Park (Davie)',
           amountPaid: 0,
+          coachName: session.coach_name || undefined,
         })
       }
 
@@ -192,6 +193,7 @@ export async function POST(request: NextRequest) {
           sessionTime: formatTime(session.start_time),
           sessionLocation: session.location || 'Bamford Park (Davie)',
           amountPaid: finalPrice,
+          coachName: session.coach_name || undefined,
         })
       }
 

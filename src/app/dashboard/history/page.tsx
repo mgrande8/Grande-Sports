@@ -23,6 +23,7 @@ interface BookingWithSession {
     session_type: string
     date: string
     price: number
+    coach_name: string | null
   }
 }
 
@@ -56,7 +57,8 @@ export default function HistoryPage() {
           title,
           session_type,
           date,
-          price
+          price,
+          coach_name
         )
       `)
       .eq('user_id', user.id)
@@ -162,6 +164,7 @@ export default function HistoryPage() {
                         </div>
                         <p className="text-sm text-gs-gray-600">
                           {getSessionTypeLabel(booking.session.session_type)} • {formatDate(booking.session.date)}
+                          {booking.session.coach_name && ` • ${booking.session.coach_name}`}
                         </p>
                         <p className="text-xs text-gs-gray-500 mt-1">
                           Booked on {format(new Date(booking.created_at), 'MMM d, yyyy')}

@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
           sessionTime: formatTime(session.start_time),
           sessionLocation: session.location || 'Bamford Park (Davie)',
           amountPaid: (checkoutSession.amount_total || 0) / 100,
+          coachName: session.coach_name || undefined,
         })
         console.log('Confirmation email sent to:', user.email)
       } catch (emailError) {

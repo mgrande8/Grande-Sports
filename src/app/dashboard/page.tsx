@@ -25,6 +25,7 @@ interface BookingWithSession {
     end_time: string
     location: string
     price: number
+    coach_name: string | null
   }
 }
 
@@ -79,7 +80,8 @@ export default function DashboardPage() {
           start_time,
           end_time,
           location,
-          price
+          price,
+          coach_name
         )
       `)
       .eq('user_id', userId)
@@ -226,6 +228,9 @@ export default function DashboardPage() {
                           </span>
                         </div>
                         <h3 className="font-bold text-lg">{booking.session.title}</h3>
+                        {booking.session.coach_name && (
+                          <p className="text-sm text-gs-gray-500">with {booking.session.coach_name}</p>
+                        )}
                         <div className="flex flex-wrap gap-4 mt-2 text-sm text-gs-gray-600">
                           <div className="flex items-center gap-1">
                             <Calendar size={16} />

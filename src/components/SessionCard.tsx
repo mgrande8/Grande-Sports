@@ -2,7 +2,7 @@
 
 import { Session } from '@/lib/types'
 import { formatDate, formatTime, formatCurrency, getSessionTypeLabel, getSessionTypeColor, cn } from '@/lib/utils'
-import { Users, MapPin, Clock } from 'lucide-react'
+import { Users, MapPin, Clock, User } from 'lucide-react'
 
 interface SessionCardProps {
   session: Session
@@ -42,6 +42,12 @@ export default function SessionCard({
 
           {/* Title & Date */}
           <h3 className="text-lg font-bold text-gs-black">{session.title}</h3>
+          {session.coach_name && (
+            <p className="text-sm text-gs-gray-500 flex items-center gap-1">
+              <User size={14} />
+              with {session.coach_name}
+            </p>
+          )}
           <p className="text-gs-gray-600">{formatDate(session.date)}</p>
 
           {/* Details */}

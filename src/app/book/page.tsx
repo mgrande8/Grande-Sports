@@ -416,6 +416,12 @@ export default function BookPage() {
                   <span className="text-gs-gray-600">Session</span>
                   <span>{selectedSession.title}</span>
                 </div>
+                {selectedSession.coach_name && (
+                  <div className="flex justify-between mb-2">
+                    <span className="text-gs-gray-600">Coach</span>
+                    <span>{selectedSession.coach_name}</span>
+                  </div>
+                )}
                 <div className="flex justify-between mb-2">
                   <span className="text-gs-gray-600">Original Price</span>
                   <span className={discountApplied ? 'line-through text-gs-gray-400' : ''}>

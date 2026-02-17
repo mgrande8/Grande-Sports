@@ -102,6 +102,7 @@ export async function POST(request: NextRequest) {
         sessionDate: formatDate(session.date),
         sessionTime: formatTime(session.start_time),
         sessionLocation: session.location || 'Bamford Park (Davie)',
+        coachName: session.coach_name || undefined,
       })
 
       if (!emailResult.success) {

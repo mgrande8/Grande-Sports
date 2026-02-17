@@ -41,6 +41,7 @@ export default function AdminSessionsPage() {
     end_time: '11:00',
     location: 'Bamford Park (Davie)',
     notes: '',
+    coach_name: 'Coach Miguel',
     is_recurring: false,
     recurrence_day: getDay(new Date()),
     recurrence_end_date: format(addWeeks(new Date(), 8), 'yyyy-MM-dd'),
@@ -108,6 +109,7 @@ export default function AdminSessionsPage() {
       max_capacity: SESSION_CAPACITY[formData.session_type],
       location: formData.location,
       notes: formData.notes || null,
+      coach_name: formData.coach_name,
     }
 
     try {
@@ -202,6 +204,7 @@ export default function AdminSessionsPage() {
       end_time: session.end_time,
       location: session.location,
       notes: session.notes || '',
+      coach_name: session.coach_name || 'Coach Miguel',
       is_recurring: false,
       recurrence_day: getDay(new Date(session.date)),
       recurrence_end_date: format(addWeeks(new Date(), 8), 'yyyy-MM-dd'),
@@ -279,6 +282,7 @@ export default function AdminSessionsPage() {
       end_time: '11:00',
       location: 'Bamford Park (Davie)',
       notes: '',
+      coach_name: 'Coach Miguel',
       is_recurring: false,
       recurrence_day: getDay(new Date()),
       recurrence_end_date: format(addWeeks(new Date(), 8), 'yyyy-MM-dd'),
@@ -475,6 +479,9 @@ export default function AdminSessionsPage() {
                               <p className="text-sm text-gs-gray-600">
                                 {formatTime(session.start_time)} - {formatTime(session.end_time)} • {session.location}
                               </p>
+                              {session.coach_name && (
+                                <p className="text-sm text-gs-gray-500">with {session.coach_name}</p>
+                              )}
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-sm text-gs-gray-600">
@@ -554,6 +561,9 @@ export default function AdminSessionsPage() {
                             <p className="text-sm text-gs-gray-600">
                               {formatTime(session.start_time)} - {formatTime(session.end_time)} • {session.location}
                             </p>
+                            {session.coach_name && (
+                              <p className="text-sm text-gs-gray-500 mt-1">with {session.coach_name}</p>
+                            )}
                           </div>
                           <div className="flex items-center gap-4">
                             <div className="text-right">
@@ -642,6 +652,20 @@ export default function AdminSessionsPage() {
                     className="input-field"
                     placeholder={`${getSessionTypeLabel(formData.session_type)}`}
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gs-gray-700 mb-1">
+                    Coach
+                  </label>
+                  <select
+                    value={formData.coach_name}
+                    onChange={(e) => setFormData({ ...formData, coach_name: e.target.value })}
+                    className="input-field"
+                  >
+                    <option value="Coach Miguel">Coach Miguel</option>
+                    <option value="Coach Fabian">Coach Fabian</option>
+                  </select>
                 </div>
 
                 {/* Recurring Option */}
