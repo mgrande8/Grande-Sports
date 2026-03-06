@@ -26,7 +26,18 @@ export async function POST(request: NextRequest) {
 
   if (event.type === 'checkout.session.completed') {
     const checkoutSession = event.data.object as Stripe.Checkout.Session
-    const { user_id, session_id, discount_code_id, discount_amount } = checkoutSession.metadata!
+    const {
+      user_id,
+      session_id,
+      discount_code_id,
+      discount_amount,
+      position,
+      level,
+      goals,
+      referral_source,
+      referred_by,
+      referral_discount_applied,
+    } = checkoutSession.metadata!
 
     // Create booking
     const { error: bookingError } = await supabase
@@ -40,6 +51,12 @@ export async function POST(request: NextRequest) {
         amount_paid: (checkoutSession.amount_total || 0) / 100,
         discount_code_id: discount_code_id || null,
         discount_amount: parseFloat(discount_amount || '0'),
+        position: position || null,
+        level: level || null,
+        goals: goals || null,
+        referral_source: referral_source || null,
+        referred_by: referred_by || null,
+        referral_discount_applied: referral_discount_applied === 'true',
       })
 
     if (bookingError) {
@@ -70,7 +87,6 @@ export async function POST(request: NextRequest) {
       const session = sessionResult.data
       const user = userResult.data
 
-      // Send confirmation email
       try {
         await sendBookingConfirmationEmail({
           to: user.email,
@@ -78,7 +94,7 @@ export async function POST(request: NextRequest) {
           sessionTitle: session.title,
           sessionDate: formatDate(session.date),
           sessionTime: formatTime(session.start_time),
-          sessionLocation: session.location || 'Bamford Park (Davie)',
+          sessionLocation: session.location || 'Bamford Park, Davie, FL 33314',
           amountPaid: (checkoutSession.amount_total || 0) / 100,
           coachName: session.coach_name || undefined,
         })

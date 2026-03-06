@@ -3,6 +3,7 @@ import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supab
 import { stripe } from '@/lib/stripe'
 import { calculateDiscountedPrice, formatDate, formatTime } from '@/lib/utils'
 import { sendBookingConfirmationEmail } from '@/lib/email'
+import { REFERRAL_DISCOUNT } from '@/lib/types'
 
 // POST - Pay with a saved payment method
 export async function POST(request: NextRequest) {
@@ -14,13 +15,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Please sign in to book' }, { status: 401 })
     }
 
-    const { sessionId, discountCodeId, paymentMethodId } = await request.json()
+    const { sessionId, discountCodeId, paymentMethodId, position, level, goals, referralSource, referredBy } = await request.json()
 
     if (!paymentMethodId) {
       return NextResponse.json({ error: 'Payment method required' }, { status: 400 })
     }
 
-    // Use service role client to bypass RLS
     const serviceClient = createServiceRoleClient()
 
     // Get session details
@@ -36,12 +36,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 })
     }
 
-    // Check capacity
     if (session.current_capacity >= session.max_capacity) {
       return NextResponse.json({ error: 'Session is full' }, { status: 400 })
     }
 
-    // Check if already booked
     const { data: existingBooking } = await serviceClient
       .from('bookings')
       .select('id')
@@ -57,6 +55,7 @@ export async function POST(request: NextRequest) {
     // Calculate price with discount
     let finalPrice = session.price
     let discountAmount = 0
+    let referralDiscountApplied = false
 
     if (discountCodeId) {
       const { data: discount } = await serviceClient
@@ -70,6 +69,27 @@ export async function POST(request: NextRequest) {
         finalPrice = calculateDiscountedPrice(session.price, discount.discount_type, discount.discount_value)
         discountAmount = session.price - finalPrice
       }
+    } else if (referredBy) {
+      const { count } = await serviceClient
+        .from('bookings')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .neq('status', 'cancelled')
+
+      if (count === 0) {
+        finalPrice = Math.max(0, session.price - REFERRAL_DISCOUNT)
+        discountAmount = session.price - finalPrice
+        referralDiscountApplied = true
+      }
+    }
+
+    const bookingFields = {
+      position: position || null,
+      level: level || null,
+      goals: goals || null,
+      referral_source: referralSource || null,
+      referred_by: referredBy || null,
+      referral_discount_applied: referralDiscountApplied,
     }
 
     // If free, create booking directly
@@ -84,6 +104,7 @@ export async function POST(request: NextRequest) {
           amount_paid: 0,
           discount_code_id: discountCodeId || null,
           discount_amount: discountAmount,
+          ...bookingFields,
         })
 
       if (bookingError) {
@@ -91,20 +112,17 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to create booking' }, { status: 500 })
       }
 
-      // Update session capacity
       await serviceClient
         .from('sessions')
         .update({ current_capacity: session.current_capacity + 1 })
         .eq('id', sessionId)
 
-      // Get user profile for email
       const { data: profile } = await serviceClient
         .from('profiles')
         .select('email, full_name')
         .eq('id', user.id)
         .single()
 
-      // Send confirmation email
       if (profile) {
         await sendBookingConfirmationEmail({
           to: profile.email,
@@ -112,7 +130,7 @@ export async function POST(request: NextRequest) {
           sessionTitle: session.title,
           sessionDate: formatDate(session.date),
           sessionTime: formatTime(session.start_time),
-          sessionLocation: session.location || 'Bamford Park (Davie)',
+          sessionLocation: session.location || 'Bamford Park, Davie, FL 33314',
           amountPaid: 0,
           coachName: session.coach_name || undefined,
         })
@@ -146,11 +164,16 @@ export async function POST(request: NextRequest) {
         session_id: sessionId,
         discount_code_id: discountCodeId || '',
         discount_amount: discountAmount.toString(),
+        position: position || '',
+        level: level || '',
+        goals: goals || '',
+        referral_source: referralSource || '',
+        referred_by: referredBy || '',
+        referral_discount_applied: referralDiscountApplied ? 'true' : 'false',
       },
     })
 
     if (paymentIntent.status === 'succeeded') {
-      // Create the booking
       const { error: bookingError } = await serviceClient
         .from('bookings')
         .insert({
@@ -162,28 +185,25 @@ export async function POST(request: NextRequest) {
           payment_intent_id: paymentIntent.id,
           discount_code_id: discountCodeId || null,
           discount_amount: discountAmount,
+          ...bookingFields,
         })
 
       if (bookingError) {
-        // Payment succeeded but booking failed - should refund
         console.error('Booking creation failed after payment:', bookingError)
         return NextResponse.json({ error: 'Booking failed, please contact support' }, { status: 500 })
       }
 
-      // Update session capacity
       await serviceClient
         .from('sessions')
         .update({ current_capacity: session.current_capacity + 1 })
         .eq('id', sessionId)
 
-      // Get user profile for email
       const { data: userProfile } = await serviceClient
         .from('profiles')
         .select('email, full_name')
         .eq('id', user.id)
         .single()
 
-      // Send confirmation email
       if (userProfile) {
         await sendBookingConfirmationEmail({
           to: userProfile.email,
@@ -191,7 +211,7 @@ export async function POST(request: NextRequest) {
           sessionTitle: session.title,
           sessionDate: formatDate(session.date),
           sessionTime: formatTime(session.start_time),
-          sessionLocation: session.location || 'Bamford Park (Davie)',
+          sessionLocation: session.location || 'Bamford Park, Davie, FL 33314',
           amountPaid: finalPrice,
           coachName: session.coach_name || undefined,
         })
@@ -208,7 +228,6 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Saved method checkout error:', error)
 
-    // Handle specific Stripe errors
     if (error.type === 'StripeCardError') {
       return NextResponse.json({ error: error.message }, { status: 400 })
     }

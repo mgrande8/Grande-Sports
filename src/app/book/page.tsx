@@ -6,10 +6,10 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import SessionCard from '@/components/SessionCard'
 import LoadingSpinner from '@/components/LoadingSpinner'
-import { Session } from '@/lib/types'
+import { Session, POSITION_OPTIONS, LEVEL_OPTIONS, GOALS_OPTIONS, REFERRAL_SOURCE_OPTIONS, REFERRAL_DISCOUNT, PACKAGE_OPTIONS } from '@/lib/types'
 import { formatCurrency, calculateDiscountedPrice } from '@/lib/utils'
 import { format, addDays, startOfDay, addMonths } from 'date-fns'
-import { Calendar, Tag, CreditCard, ArrowRight, ArrowLeft, Wallet } from 'lucide-react'
+import { Calendar, Tag, CreditCard, ArrowRight, ArrowLeft, Wallet, MapPin, User, Package, Mail } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -41,6 +41,16 @@ export default function BookPage() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('new')
   const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false)
 
+  // About You form fields
+  const [position, setPosition] = useState('')
+  const [level, setLevel] = useState('')
+  const [goals, setGoals] = useState('')
+  const [referralSource, setReferralSource] = useState('')
+
+  // Referral discount
+  const [referredBy, setReferredBy] = useState('')
+  const [isFirstBooking, setIsFirstBooking] = useState(true)
+
   const router = useRouter()
   const supabase = createClient()
 
@@ -56,10 +66,7 @@ export default function BookPage() {
         setCheckoutLoading(false)
       }
     }
-
-    // Reset on mount (in case user navigated back)
     setCheckoutLoading(false)
-
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
@@ -71,6 +78,13 @@ export default function BookPage() {
     setUser(user)
     if (user) {
       fetchPaymentMethods()
+      // Check if first booking for referral discount
+      const { count } = await supabase
+        .from('bookings')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .neq('status', 'cancelled')
+      setIsFirstBooking(count === 0)
     }
   }
 
@@ -91,11 +105,9 @@ export default function BookPage() {
   const fetchSessions = async () => {
     setLoading(true)
     const dateStr = format(selectedDate, 'yyyy-MM-dd')
-
     try {
       const response = await fetch(`/api/sessions?date=${dateStr}`)
       const data = await response.json()
-
       if (data.sessions) {
         setSessions(data.sessions)
       }
@@ -107,24 +119,21 @@ export default function BookPage() {
 
   const applyDiscount = async () => {
     if (!discountCode.trim()) return
-
     setDiscountError('')
-
     try {
       const response = await fetch('/api/discount/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: discountCode }),
       })
-
       const data = await response.json()
-
       if (!response.ok) {
         setDiscountError(data.error || 'Invalid discount code')
         setDiscountApplied(null)
         return
       }
-
+      // Clear referral if applying discount code (they don't stack)
+      setReferredBy('')
       setDiscountApplied({
         type: data.discount.type,
         value: data.discount.value,
@@ -138,6 +147,10 @@ export default function BookPage() {
 
   const getFinalPrice = () => {
     if (!selectedSession) return 0
+    // Referral discount: $15 off, only for first booking, doesn't stack with discount codes
+    if (referredBy.trim() && isFirstBooking && !discountApplied) {
+      return Math.max(0, selectedSession.price - REFERRAL_DISCOUNT)
+    }
     if (!discountApplied) return selectedSession.price
     return calculateDiscountedPrice(
       selectedSession.price,
@@ -146,14 +159,12 @@ export default function BookPage() {
     )
   }
 
+  const hasReferralDiscount = !!(referredBy.trim() && isFirstBooking && !discountApplied)
+
   const getDiscountDisplay = () => {
     if (!discountApplied) return ''
-    if (discountApplied.type === 'free_session') {
-      return 'Free Session!'
-    }
-    if (discountApplied.type === 'percentage') {
-      return `${discountApplied.value}% off`
-    }
+    if (discountApplied.type === 'free_session') return 'Free Session!'
+    if (discountApplied.type === 'percentage') return `${discountApplied.value}% off`
     return `${formatCurrency(discountApplied.value)} off`
   }
 
@@ -161,10 +172,14 @@ export default function BookPage() {
     if (!selectedSession) return
 
     if (!user) {
-      // Store selected session and redirect to login
       localStorage.setItem('pendingBooking', JSON.stringify({
         sessionId: selectedSession.id,
         discountCodeId: discountApplied?.id,
+        position,
+        level,
+        goals,
+        referralSource,
+        referredBy: referredBy.trim(),
       }))
       router.push('/auth/login')
       return
@@ -173,6 +188,14 @@ export default function BookPage() {
     setCheckoutLoading(true)
 
     try {
+      const extraFields = {
+        position,
+        level,
+        goals,
+        referralSource,
+        referredBy: referredBy.trim() || undefined,
+      }
+
       // If using a saved payment method
       if (selectedPaymentMethod !== 'new' && paymentMethods.length > 0) {
         const response = await fetch('/api/checkout/saved-method', {
@@ -182,6 +205,7 @@ export default function BookPage() {
             sessionId: selectedSession.id,
             discountCodeId: discountApplied?.id,
             paymentMethodId: selectedPaymentMethod,
+            ...extraFields,
           }),
         })
 
@@ -206,10 +230,11 @@ export default function BookPage() {
         body: JSON.stringify({
           sessionId: selectedSession.id,
           discountCodeId: discountApplied?.id,
+          ...extraFields,
         }),
       })
 
-      const { url, error, free } = await response.json()
+      const { url, error } = await response.json()
 
       if (error) {
         alert(error)
@@ -217,7 +242,6 @@ export default function BookPage() {
         return
       }
 
-      // For free bookings, url is the success page
       window.location.href = url
     } catch (err) {
       alert('Something went wrong. Please try again.')
@@ -225,11 +249,8 @@ export default function BookPage() {
     }
   }
 
-  const getCardBrandIcon = (brand: string) => {
-    return '💳'
-  }
+  const getCardBrandIcon = (brand: string) => '💳'
 
-  // Generate date options for the next 30 days
   const dateOptions = Array.from({ length: 30 }, (_, i) => addDays(new Date(), i))
     .filter(date => date >= startOfDay(new Date()) && date <= addMonths(new Date(), 1))
 
@@ -249,6 +270,77 @@ export default function BookPage() {
 
           <h1 className="text-3xl font-bold mb-2">Book a Session</h1>
           <p className="text-gs-gray-600 mb-8">Select a date and choose your training session</p>
+
+          {/* Training Packages */}
+          <div className="card mb-6">
+            <h2 className="font-semibold flex items-center gap-2 mb-4">
+              <Package size={20} />
+              Training Packages
+            </h2>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {PACKAGE_OPTIONS.map((pkg) => (
+                <div
+                  key={pkg.name}
+                  className={`border-2 rounded-lg p-4 text-center relative ${
+                    pkg.popular ? 'border-gs-green bg-gs-green/5' : 'border-gs-gray-200'
+                  }`}
+                >
+                  {pkg.popular && (
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gs-green text-white text-xs font-bold px-3 py-1 rounded-full">
+                      Most Popular
+                    </span>
+                  )}
+                  <h3 className="font-bold text-sm mt-1">{pkg.name}</h3>
+                  <p className="text-2xl font-bold text-gs-black mt-2">
+                    {formatCurrency(pkg.totalPrice)}
+                  </p>
+                  {pkg.pricePerSession && (
+                    <p className="text-xs text-gs-gray-500">
+                      {formatCurrency(pkg.pricePerSession)}/session
+                    </p>
+                  )}
+                  {pkg.savings && (
+                    <span className="inline-block bg-gs-green/10 text-gs-green text-xs font-semibold px-2 py-0.5 rounded mt-2">
+                      {pkg.savings}
+                    </span>
+                  )}
+                  <p className="text-xs text-gs-gray-600 mt-2">{pkg.description}</p>
+                  {pkg.sessions !== '1' ? (
+                    <a
+                      href={`mailto:td.grandesportstraining@gmail.com?subject=Package Inquiry - ${pkg.name}`}
+                      className="btn-secondary text-xs mt-3 inline-flex items-center gap-1"
+                    >
+                      <Mail size={12} />
+                      Contact Us
+                    </a>
+                  ) : (
+                    <span className="text-xs text-gs-gray-500 mt-3 inline-block">Book below</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Location Info */}
+          <div className="card mb-6 bg-gs-green/5 border-gs-green/20">
+            <div className="flex items-start gap-3">
+              <MapPin className="text-gs-green mt-0.5 flex-shrink-0" size={20} />
+              <div>
+                <h3 className="font-semibold text-gs-black">Bamford Park, Davie, FL 33314</h3>
+                <p className="text-sm text-gs-gray-600 mt-1">
+                  Free parking available on-site near the soccer fields.
+                </p>
+                <a
+                  href="https://www.google.com/maps/search/Bamford+Park+Davie+FL+33314"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-gs-green hover:underline mt-1 inline-block"
+                >
+                  Get Directions →
+                </a>
+              </div>
+            </div>
+          </div>
 
           {/* Date Selector */}
           <div className="card mb-6">
@@ -308,6 +400,54 @@ export default function BookPage() {
             )}
           </div>
 
+          {/* About You Form */}
+          {selectedSession && (
+            <div className="card mb-6 animate-fade-in">
+              <h2 className="font-semibold mb-4 flex items-center gap-2">
+                <User size={20} />
+                About You
+              </h2>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gs-gray-700 mb-1">Position</label>
+                  <select value={position} onChange={(e) => setPosition(e.target.value)} className="input-field w-full">
+                    <option value="">Select position...</option>
+                    {POSITION_OPTIONS.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gs-gray-700 mb-1">Level</label>
+                  <select value={level} onChange={(e) => setLevel(e.target.value)} className="input-field w-full">
+                    <option value="">Select level...</option>
+                    {LEVEL_OPTIONS.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gs-gray-700 mb-1">Training Goals</label>
+                  <select value={goals} onChange={(e) => setGoals(e.target.value)} className="input-field w-full">
+                    <option value="">Select primary goal...</option>
+                    {GOALS_OPTIONS.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gs-gray-700 mb-1">How did you hear about us?</label>
+                  <select value={referralSource} onChange={(e) => setReferralSource(e.target.value)} className="input-field w-full">
+                    <option value="">Select...</option>
+                    {REFERRAL_SOURCE_OPTIONS.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Checkout Panel */}
           {selectedSession && (
             <div className="card sticky bottom-4 bg-white shadow-lg border-2 border-gs-green animate-fade-in">
@@ -316,46 +456,69 @@ export default function BookPage() {
                 Complete Your Booking
               </h2>
 
-              {/* Discount Code */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gs-gray-700 mb-1">
-                  <Tag size={14} className="inline mr-1" />
-                  Discount Code
-                </label>
-                <div className="flex gap-2">
+              {/* Referral Discount (only for first-time bookers, hidden when discount code is applied) */}
+              {isFirstBooking && !discountApplied && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gs-gray-700 mb-1">
+                    Referred by someone? Get $15 off!
+                  </label>
                   <input
                     type="text"
-                    value={discountCode}
-                    onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
-                    placeholder="Enter code"
-                    className="input-field flex-1"
-                    disabled={!!discountApplied}
+                    value={referredBy}
+                    onChange={(e) => setReferredBy(e.target.value)}
+                    placeholder="Enter their name"
+                    className="input-field w-full"
                   />
-                  {discountApplied ? (
-                    <button
-                      onClick={() => {
-                        setDiscountApplied(null)
-                        setDiscountCode('')
-                      }}
-                      className="btn-secondary"
-                    >
-                      Remove
-                    </button>
-                  ) : (
-                    <button onClick={applyDiscount} className="btn-secondary">
-                      Apply
-                    </button>
+                  {hasReferralDiscount && (
+                    <p className="text-gs-green text-sm mt-1">
+                      Referral discount: ${REFERRAL_DISCOUNT} off your first session!
+                    </p>
                   )}
                 </div>
-                {discountError && (
-                  <p className="text-red-600 text-sm mt-1">{discountError}</p>
-                )}
-                {discountApplied && (
-                  <p className="text-gs-green text-sm mt-1">
-                    {getDiscountDisplay()}
-                  </p>
-                )}
-              </div>
+              )}
+
+              {/* Discount Code (hidden when referral is active) */}
+              {!hasReferralDiscount && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gs-gray-700 mb-1">
+                    <Tag size={14} className="inline mr-1" />
+                    Discount Code
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={discountCode}
+                      onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
+                      placeholder="Enter code"
+                      className="input-field flex-1"
+                      disabled={!!discountApplied}
+                    />
+                    {discountApplied ? (
+                      <button
+                        onClick={() => {
+                          setDiscountApplied(null)
+                          setDiscountCode('')
+                        }}
+                        className="btn-secondary"
+                      >
+                        Remove
+                      </button>
+                    ) : (
+                      <button onClick={applyDiscount} className="btn-secondary">
+                        Apply
+                      </button>
+                    )}
+                  </div>
+                  {discountError && (
+                    <p className="text-red-600 text-sm mt-1">{discountError}</p>
+                  )}
+                  {discountApplied && (
+                    <p className="text-gs-green text-sm mt-1">
+                      {getDiscountDisplay()}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Payment Method Selection */}
               {user && paymentMethods.length > 0 && getFinalPrice() > 0 && (
@@ -424,7 +587,7 @@ export default function BookPage() {
                 )}
                 <div className="flex justify-between mb-2">
                   <span className="text-gs-gray-600">Original Price</span>
-                  <span className={discountApplied ? 'line-through text-gs-gray-400' : ''}>
+                  <span className={(discountApplied || hasReferralDiscount) ? 'line-through text-gs-gray-400' : ''}>
                     {formatCurrency(selectedSession.price)}
                   </span>
                 </div>
@@ -432,6 +595,12 @@ export default function BookPage() {
                   <div className="flex justify-between mb-2 text-gs-green">
                     <span>Discount</span>
                     <span>-{formatCurrency(selectedSession.price - getFinalPrice())}</span>
+                  </div>
+                )}
+                {hasReferralDiscount && (
+                  <div className="flex justify-between mb-2 text-gs-green">
+                    <span>Referral Discount</span>
+                    <span>-{formatCurrency(REFERRAL_DISCOUNT)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-lg font-bold">

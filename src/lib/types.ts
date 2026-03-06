@@ -46,6 +46,15 @@ export interface Booking {
   amount_paid: number
   discount_code_id?: string
   discount_amount: number
+  position?: string
+  level?: string
+  goals?: string
+  referral_source?: string
+  referred_by?: string
+  referral_discount_applied?: boolean
+  reminder_sent?: boolean
+  follow_up_sent?: boolean
+  trainer_observations?: string
   created_at: string
   cancelled_at?: string
   user?: User
@@ -124,3 +133,90 @@ export const SESSION_CAPACITY = {
   'semi-private': 2,
   group: 8,
 } as const
+
+// Referral discount
+export const REFERRAL_DISCOUNT = 15
+export const REFERRAL_PRICE = 80
+
+// Form option constants
+export const POSITION_OPTIONS = [
+  'Goalkeeper',
+  'Center Back',
+  'Full Back',
+  'Defensive Midfielder',
+  'Central Midfielder',
+  'Attacking Midfielder',
+  'Winger',
+  'Striker',
+  'Not Sure / Multiple',
+] as const
+
+export const LEVEL_OPTIONS = [
+  'Beginner (Just starting out)',
+  'Recreational (Play for fun)',
+  'Competitive (Club/Travel team)',
+  'High School Varsity',
+  'College / Semi-Pro',
+  'Professional',
+] as const
+
+export const GOALS_OPTIONS = [
+  'Improve technical skills',
+  'Game preparation',
+  'Position-specific training',
+  'Speed & agility',
+  'Tactical understanding',
+  'Confidence building',
+  'College recruitment prep',
+  'General fitness',
+] as const
+
+export const REFERRAL_SOURCE_OPTIONS = [
+  'Google Search',
+  'Instagram',
+  'Facebook',
+  'Friend / Family',
+  'Coach Recommendation',
+  'Saw us at a field',
+  'Other',
+] as const
+
+// Package pricing display
+export const PACKAGE_OPTIONS = [
+  {
+    name: 'Monthly Unlimited',
+    sessions: 'Unlimited',
+    pricePerSession: null,
+    totalPrice: 680,
+    savings: 'Best Value',
+    description: 'Unlimited private sessions for the month. Train as much as you want.',
+    popular: true,
+  },
+  {
+    name: '10-Session Pack',
+    sessions: '10',
+    pricePerSession: 80,
+    totalPrice: 800,
+    savings: 'Save $150',
+    description: 'Ten private training sessions. Use anytime within 3 months.',
+    popular: false,
+  },
+  {
+    name: '5-Session Pack',
+    sessions: '5',
+    pricePerSession: 85,
+    totalPrice: 425,
+    savings: 'Save $50',
+    description: 'Five private training sessions. Use anytime within 2 months.',
+    popular: false,
+  },
+  {
+    name: 'Single Session',
+    sessions: '1',
+    pricePerSession: 95,
+    totalPrice: 95,
+    savings: null,
+    description: 'One private training session. Book online instantly.',
+    popular: false,
+  },
+] as const

@@ -31,7 +31,7 @@ CREATE TABLE public.sessions (
   price DECIMAL(10,2) NOT NULL,
   max_capacity INTEGER NOT NULL DEFAULT 1,
   current_capacity INTEGER NOT NULL DEFAULT 0,
-  location TEXT DEFAULT 'Miami Shores Park',
+  location TEXT DEFAULT 'Bamford Park, Davie, FL 33314',
   notes TEXT,
   coach_name TEXT,
   is_active BOOLEAN DEFAULT TRUE,

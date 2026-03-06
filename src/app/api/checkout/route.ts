@@ -3,6 +3,7 @@ import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supab
 import { stripe } from '@/lib/stripe'
 import { calculateDiscountedPrice, formatDate, formatTime } from '@/lib/utils'
 import { sendBookingConfirmationEmail } from '@/lib/email'
+import { REFERRAL_DISCOUNT } from '@/lib/types'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Please sign in to book' }, { status: 401 })
     }
 
-    const { sessionId, discountCodeId } = await request.json()
+    const { sessionId, discountCodeId, position, level, goals, referralSource, referredBy } = await request.json()
 
     // Use service role client to bypass RLS for session lookup
     const serviceClient = createServiceRoleClient()
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Session is full' }, { status: 400 })
     }
 
-    // Check if already booked (use service client to bypass RLS)
+    // Check if already booked
     const { data: existingBooking } = await serviceClient
       .from('bookings')
       .select('id')
@@ -52,6 +53,7 @@ export async function POST(request: NextRequest) {
     // Calculate price with discount
     let finalPrice = session.price
     let discountAmount = 0
+    let referralDiscountApplied = false
 
     if (discountCodeId) {
       const { data: discount } = await serviceClient
@@ -65,6 +67,28 @@ export async function POST(request: NextRequest) {
         finalPrice = calculateDiscountedPrice(session.price, discount.discount_type, discount.discount_value)
         discountAmount = session.price - finalPrice
       }
+    } else if (referredBy) {
+      // Referral discount: $15 off first session, doesn't stack with discount codes
+      const { count } = await serviceClient
+        .from('bookings')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .neq('status', 'cancelled')
+
+      if (count === 0) {
+        finalPrice = Math.max(0, session.price - REFERRAL_DISCOUNT)
+        discountAmount = session.price - finalPrice
+        referralDiscountApplied = true
+      }
+    }
+
+    const bookingFields = {
+      position: position || null,
+      level: level || null,
+      goals: goals || null,
+      referral_source: referralSource || null,
+      referred_by: referredBy || null,
+      referral_discount_applied: referralDiscountApplied,
     }
 
     // If the session is free (after discount), create booking directly without Stripe
@@ -79,6 +103,7 @@ export async function POST(request: NextRequest) {
           amount_paid: 0,
           discount_code_id: discountCodeId || null,
           discount_amount: discountAmount,
+          ...bookingFields,
         })
 
       if (bookingError) {
@@ -92,14 +117,13 @@ export async function POST(request: NextRequest) {
         .update({ current_capacity: session.current_capacity + 1 })
         .eq('id', sessionId)
 
-      // Get user profile for email
+      // Send confirmation email
       const { data: profile } = await serviceClient
         .from('profiles')
         .select('email, full_name')
         .eq('id', user.id)
         .single()
 
-      // Send confirmation email for free booking
       if (profile) {
         await sendBookingConfirmationEmail({
           to: profile.email,
@@ -107,13 +131,12 @@ export async function POST(request: NextRequest) {
           sessionTitle: session.title,
           sessionDate: formatDate(session.date),
           sessionTime: formatTime(session.start_time),
-          sessionLocation: session.location || 'Bamford Park (Davie)',
+          sessionLocation: session.location || 'Bamford Park, Davie, FL 33314',
           amountPaid: 0,
           coachName: session.coach_name || undefined,
         })
       }
 
-      // Return success URL directly for free bookings
       return NextResponse.json({
         url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?booking=success`,
         free: true
@@ -143,8 +166,7 @@ export async function POST(request: NextRequest) {
         .eq('id', user.id)
     }
 
-    // Create Stripe Checkout session with card and Apple Pay
-    // payment_method_types: ['card'] automatically enables Apple Pay and Google Pay on supported devices
+    // Create Stripe Checkout session
     const checkoutSession = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
       payment_method_types: ['card'],
@@ -154,7 +176,7 @@ export async function POST(request: NextRequest) {
             currency: 'usd',
             product_data: {
               name: session.title,
-              description: `${session.date} at ${session.start_time}${session.coach_name ? ` with ${session.coach_name}` : ''}`,
+              description: `${session.date} at ${session.start_time}${session.coach_name ? ` with ${session.coach_name}` : ''} — Bamford Park, Davie, FL 33314`,
             },
             unit_amount: Math.round(finalPrice * 100),
           },
@@ -162,7 +184,6 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'payment',
-      // Enable saving payment method for future use
       payment_intent_data: {
         setup_future_usage: 'off_session',
       },
@@ -173,6 +194,12 @@ export async function POST(request: NextRequest) {
         session_id: sessionId,
         discount_code_id: discountCodeId || '',
         discount_amount: discountAmount.toString(),
+        position: position || '',
+        level: level || '',
+        goals: goals || '',
+        referral_source: referralSource || '',
+        referred_by: referredBy || '',
+        referral_discount_applied: referralDiscountApplied ? 'true' : 'false',
       },
     })
 

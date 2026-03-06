@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceRoleClient } from '@/lib/supabase-server'
-import { Resend } from 'resend'
 
-function getResendClient() {
-  return new Resend(process.env.RESEND_API_KEY)
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -77,7 +73,7 @@ export async function POST(request: NextRequest) {
       // Profile might be auto-created by trigger, continue
     }
 
-    // Send confirmation email via Resend
+    // Send confirmation email via Brevo
     if (linkData?.properties?.action_link) {
       const confirmationLink = linkData.properties.action_link
 
@@ -142,7 +138,7 @@ export async function POST(request: NextRequest) {
           Grande Sports Training
         </p>
         <p style="color: rgba(255,255,255,0.7); margin: 0; font-size: 14px;">
-          Elite Soccer Development in Miami
+          Elite Soccer Development in Davie, FL
         </p>
       </td>
     </tr>
@@ -165,17 +161,28 @@ This link will expire in 24 hours.
 If you didn't create an account, you can safely ignore this email.
 
 Grande Sports Training
-Elite Soccer Development in Miami
+Elite Soccer Development in Davie, FL
       `
 
       try {
-        await getResendClient().emails.send({
-          from: 'Grande Sports <noreply@grandesportstraining.com>',
-          to: [email],
-          subject: 'Confirm your Grande Sports account',
-          html,
-          text,
-        })
+        const brevoKey = process.env.BREVO_API_KEY
+        if (brevoKey) {
+          await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+              'accept': 'application/json',
+              'api-key': brevoKey,
+              'content-type': 'application/json',
+            },
+            body: JSON.stringify({
+              sender: { name: 'Grande Sports', email: 'noreply@grandesportstraining.com' },
+              to: [{ email }],
+              subject: 'Confirm your Grande Sports account',
+              htmlContent: html,
+              textContent: text,
+            }),
+          })
+        }
       } catch (emailError) {
         console.error('Email send error:', emailError)
         // User created but email failed - they can request a new confirmation

@@ -17,8 +17,7 @@
     "react-dom": "^18.2.0",
     "stripe": "^14.10.0",
     "date-fns": "^3.0.0",
-    "lucide-react": "^0.294.0",
-    "resend": "^2.1.0"
+    "lucide-react": "^0.294.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
