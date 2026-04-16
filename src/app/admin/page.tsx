@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import { PageLoader } from '@/components/LoadingSpinner'
 import { formatCurrency, formatDate, getSessionTypeLabel, getSessionTypeColor, cn } from '@/lib/utils'
-import { Calendar, Users, DollarSign, Tag, CreditCard, Gift, ArrowRight } from 'lucide-react'
+import { Calendar, Users, DollarSign, Tag, CreditCard, Gift, ArrowRight, Video } from 'lucide-react'
 import Link from 'next/link'
 import { format, startOfMonth, endOfMonth } from 'date-fns'
 
@@ -275,6 +275,18 @@ export default function AdminPage() {
                     <div>
                       <h3 className="font-bold text-lg">Discount Codes</h3>
                       <p className="text-gs-gray-600 text-sm">Create and manage discounts</p>
+                    </div>
+                  </div>
+                </Link>
+
+                <Link href="/admin/match-analysis" className="card hover:shadow-md transition-shadow group border-2 border-purple-200 bg-purple-50">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-purple-600 rounded-lg flex items-center justify-center group-hover:bg-purple-700 transition-colors">
+                      <Video className="text-white" size={28} />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg">Match Analysis</h3>
+                      <p className="text-gs-gray-600 text-sm">Video analysis clients</p>
                     </div>
                   </div>
                 </Link>

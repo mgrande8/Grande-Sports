@@ -2,7 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import { Calendar, CreditCard, BarChart3, Users, CheckCircle, ArrowRight, MapPin, Package } from 'lucide-react'
+import { Calendar, CreditCard, BarChart3, Users, CheckCircle, ArrowRight, MapPin, Package, Video } from 'lucide-react'
 
 export default function HomePage() {
   return (
@@ -197,6 +197,67 @@ export default function HomePage() {
               <p className="text-xs text-gs-gray-500">per session</p>
               <p className="text-sm text-gs-gray-600 mt-5">One private training session. Book online instantly.</p>
               <Link href="/book" className="btn-green mt-4 inline-block text-sm">Book Now</Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Match Analysis */}
+      <section className="py-20 bg-gs-black text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 bg-gs-green/20 text-gs-green px-4 py-2 rounded-full text-sm font-medium mb-6">
+                <Video size={18} />
+                Professional Analysis
+              </div>
+              <h2 className="text-3xl lg:text-4xl font-bold mb-4">
+                Match Analysis Service
+              </h2>
+              <p className="text-gs-gray-400 text-lg mb-6">
+                Get a detailed breakdown of your game footage by our professional coaches.
+                Receive personalized feedback and a 1-on-1 video review call.
+              </p>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-center gap-3">
+                  <CheckCircle size={20} className="text-gs-green" />
+                  <span>Full match video breakdown</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <CheckCircle size={20} className="text-gs-green" />
+                  <span>1-on-1 video review call</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <CheckCircle size={20} className="text-gs-green" />
+                  <span>Google Drive folder with all materials</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <CheckCircle size={20} className="text-gs-green" />
+                  <span>3-5 business day turnaround</span>
+                </li>
+              </ul>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link href="/match-analysis" className="btn-green text-center inline-flex items-center justify-center gap-2">
+                  Get Match Analysis - $140
+                  <ArrowRight size={18} />
+                </Link>
+                <Link href="/match-analysis/subscribe" className="btn-secondary text-center">
+                  Monthly Plan - $500/mo
+                </Link>
+              </div>
+            </div>
+            <div className="relative">
+              <div className="bg-gs-gray-800 rounded-xl p-8 border border-gs-gray-700">
+                <div className="text-center">
+                  <p className="text-5xl font-bold text-gs-green mb-2">$140</p>
+                  <p className="text-gs-gray-400 mb-6">per analysis</p>
+                  <div className="border-t border-gs-gray-700 pt-6">
+                    <p className="text-sm text-gs-gray-400 mb-2">Or save with a subscription</p>
+                    <p className="text-2xl font-bold">$500<span className="text-base font-normal text-gs-gray-400">/month</span></p>
+                    <p className="text-gs-green text-sm">4 analyses included</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
