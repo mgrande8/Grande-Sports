@@ -189,7 +189,7 @@ export async function sendMatchAnalysisConfirmationEmail(data: MatchAnalysisConf
           <li style="margin-bottom: 10px;">You'll receive an email with a link to book your review call</li>
           <li style="margin-bottom: 10px;">After the call, we'll send your analysis folder via Google Drive</li>
         </ol>
-        <p style="color: #666666; font-size: 14px; margin-top: 15px;"><strong>Turnaround time:</strong> 3-5 business days</p>
+        <p style="color: #666666; font-size: 14px; margin-top: 15px;"><strong>Turnaround time:</strong> 48-72 hours</p>
       </td>
     </tr>
     <tr>
@@ -202,7 +202,7 @@ export async function sendMatchAnalysisConfirmationEmail(data: MatchAnalysisConf
 </body>
 </html>`
 
-  const text = `GRANDE SPORTS - Match Analysis Submitted!\n\nThanks for submitting your match for analysis.\n\nSUBMISSION DETAILS:\n- Player: ${playerName}\n- Position: ${position}\n- Amount Paid: $${amount.toFixed(2)}\n\nWHAT HAPPENS NEXT:\n1. Our coaches will review your match video\n2. You'll receive an email with a link to book your review call\n3. After the call, we'll send your analysis folder via Google Drive\n\nTurnaround time: 3-5 business days\n\nQuestions? Contact us at td.grandesportstraining@gmail.com`
+  const text = `GRANDE SPORTS - Match Analysis Submitted!\n\nThanks for submitting your match for analysis.\n\nSUBMISSION DETAILS:\n- Player: ${playerName}\n- Position: ${position}\n- Amount Paid: $${amount.toFixed(2)}\n\nWHAT HAPPENS NEXT:\n1. Our coaches will review your match video\n2. You'll receive an email with a link to book your review call\n3. After the call, we'll send your analysis folder via Google Drive\n\nTurnaround time: 48-72 hours\n\nQuestions? Contact us at td.grandesportstraining@gmail.com`
 
   return sendBrevoEmail({
     to,

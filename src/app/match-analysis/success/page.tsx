@@ -76,7 +76,7 @@ export default function MatchAnalysisSuccessPage() {
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="flex-shrink-0 w-6 h-6 bg-gs-gray-300 text-white rounded-full flex items-center justify-center text-xs font-bold">2</span>
-                    <span>Our coaches will analyze your match video (3-5 business days)</span>
+                    <span>Our coaches will analyze your match video (48-72 hours)</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="flex-shrink-0 w-6 h-6 bg-gs-gray-300 text-white rounded-full flex items-center justify-center text-xs font-bold">3</span>

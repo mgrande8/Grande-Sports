@@ -7,7 +7,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import LoadingSpinner, { PageLoader } from '@/components/LoadingSpinner'
 import { formatDate, formatTime, formatCurrency, getSessionTypeLabel, getSessionTypeColor, canCancelBooking, cn } from '@/lib/utils'
-import { Calendar, Clock, MapPin, CreditCard, TrendingUp, User, AlertCircle, CheckCircle, XCircle, Settings } from 'lucide-react'
+import { Calendar, Clock, MapPin, CreditCard, TrendingUp, User, AlertCircle, CheckCircle, XCircle, Settings, Video, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 
 interface BookingWithSession {
@@ -29,12 +29,23 @@ interface BookingWithSession {
   }
 }
 
+interface MatchAnalysisSubscription {
+  id: string
+  credits_total: number
+  credits_used: number
+  credits_remaining: number
+  status: string
+  current_period_end: string
+}
+
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
   const [bookings, setBookings] = useState<BookingWithSession[]>([])
+  const [subscription, setSubscription] = useState<MatchAnalysisSubscription | null>(null)
   const [loading, setLoading] = useState(true)
   const [cancellingId, setCancellingId] = useState<string | null>(null)
+  const [cancellingSubscription, setCancellingSubscription] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -49,9 +60,50 @@ export default function DashboardPage() {
       return
     }
     setUser(user)
-    await fetchProfile(user.id)
-    await fetchBookings(user.id)
+    await Promise.all([
+      fetchProfile(user.id),
+      fetchBookings(user.id),
+      fetchSubscription(),
+    ])
     setLoading(false)
+  }
+
+  const fetchSubscription = async () => {
+    try {
+      const response = await fetch('/api/match-analysis/subscription/status')
+      const data = await response.json()
+      if (data.hasSubscription) {
+        setSubscription(data.subscription)
+      }
+    } catch (error) {
+      console.error('Failed to fetch subscription:', error)
+    }
+  }
+
+  const handleCancelSubscription = async () => {
+    if (!confirm('Are you sure you want to cancel your Match Analysis subscription? You can still use remaining credits until the end of your billing period.')) {
+      return
+    }
+
+    setCancellingSubscription(true)
+
+    try {
+      const response = await fetch('/api/match-analysis/subscription/cancel', {
+        method: 'POST',
+      })
+      const data = await response.json()
+
+      if (data.error) {
+        alert(data.error)
+      } else {
+        alert(data.message)
+        await fetchSubscription()
+      }
+    } catch (error) {
+      alert('Failed to cancel subscription')
+    }
+
+    setCancellingSubscription(false)
   }
 
   const fetchProfile = async (userId: string) => {
@@ -184,6 +236,50 @@ export default function DashboardPage() {
               </Link>
             </div>
           </div>
+
+          {/* Match Analysis Subscription */}
+          {subscription && (
+            <div className="mb-8">
+              <div className="card border-2 border-purple-200 bg-purple-50">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-purple-600 rounded-lg flex items-center justify-center">
+                      <Video className="text-white" size={28} />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg">Match Analysis Subscription</h3>
+                      <p className="text-sm text-gs-gray-600">
+                        {subscription.credits_remaining} of {subscription.credits_total} analyses remaining this month
+                      </p>
+                      <p className="text-xs text-gs-gray-500">
+                        {subscription.status === 'active' ? (
+                          <>Renews {new Date(subscription.current_period_end).toLocaleDateString()}</>
+                        ) : (
+                          <>Cancelled - expires {new Date(subscription.current_period_end).toLocaleDateString()}</>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {subscription.credits_remaining > 0 && (
+                      <Link href="/match-analysis/submit" className="btn-green text-sm">
+                        Submit Analysis
+                      </Link>
+                    )}
+                    {subscription.status === 'active' && (
+                      <button
+                        onClick={handleCancelSubscription}
+                        disabled={cancellingSubscription}
+                        className="text-red-600 hover:text-red-800 text-sm font-medium disabled:opacity-50"
+                      >
+                        {cancellingSubscription ? 'Cancelling...' : 'Cancel Subscription'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Quick Actions */}
           <div className="flex flex-wrap gap-4 mb-8">

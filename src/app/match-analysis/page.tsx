@@ -361,7 +361,7 @@ export default function MatchAnalysisPage() {
                 </button>
 
                 <p className="text-xs text-gs-gray-500 text-center mt-3">
-                  Secure payment powered by Stripe. You'll receive your analysis within 3-5 business days.
+                  Secure payment powered by Stripe. You'll receive your analysis within 48-72 hours.
                 </p>
               </div>
             </form>

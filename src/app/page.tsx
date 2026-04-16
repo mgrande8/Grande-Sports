@@ -233,7 +233,7 @@ export default function HomePage() {
                 </li>
                 <li className="flex items-center gap-3">
                   <CheckCircle size={20} className="text-gs-green" />
-                  <span>3-5 business day turnaround</span>
+                  <span>48-72 hour turnaround</span>
                 </li>
               </ul>
               <div className="flex flex-col sm:flex-row gap-4">
