@@ -130,6 +130,272 @@ export async function sendBookingConfirmationEmail(data: BookingEmailData) {
   })
 }
 
+// ============================================
+// MATCH ANALYSIS EMAILS
+// ============================================
+
+interface MatchAnalysisConfirmationData {
+  to: string
+  playerName: string
+  position: string
+  videoUrl: string
+  amount: number
+}
+
+export async function sendMatchAnalysisConfirmationEmail(data: MatchAnalysisConfirmationData) {
+  const { to, playerName, position, videoUrl, amount } = data
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Match Analysis Submitted</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+    <tr>
+      <td style="background-color: #067A3A; padding: 30px 40px; text-align: center;">
+        <img src="${process.env.NEXT_PUBLIC_APP_URL}/logo-email.png" alt="Grande Sports" style="height: 60px; width: auto;" />
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 40px 40px 20px 40px; text-align: center;">
+        <div style="display: inline-block; background-color: #e8f5e9; border-radius: 50%; width: 80px; height: 80px; line-height: 80px;">
+          <span style="font-size: 40px;">🎬</span>
+        </div>
+        <h2 style="color: #067A3A; margin: 20px 0 10px 0; font-size: 24px;">Match Analysis Submitted!</h2>
+        <p style="color: #666666; margin: 0; font-size: 16px;">Thanks for submitting your match for analysis.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 20px 40px;">
+        <div style="background-color: #f8f9fa; border-radius: 12px; padding: 25px; border-left: 4px solid #067A3A;">
+          <h3 style="color: #101012; margin: 0 0 20px 0; font-size: 18px; font-weight: 600;">Submission Details</h3>
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+            <tr><td style="padding: 8px 0; color: #666666; font-size: 14px; width: 100px;">Player</td><td style="padding: 8px 0; color: #101012; font-size: 14px; font-weight: 500;">${playerName}</td></tr>
+            <tr><td style="padding: 8px 0; color: #666666; font-size: 14px;">Position</td><td style="padding: 8px 0; color: #101012; font-size: 14px; font-weight: 500;">${position}</td></tr>
+            <tr><td style="padding: 8px 0; color: #666666; font-size: 14px;">Amount Paid</td><td style="padding: 8px 0; color: #067A3A; font-size: 14px; font-weight: 600;">$${amount.toFixed(2)}</td></tr>
+          </table>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 20px 40px;">
+        <h3 style="color: #101012; margin: 0 0 15px 0; font-size: 16px; font-weight: 600;">What happens next?</h3>
+        <ol style="color: #666666; font-size: 14px; padding-left: 20px; margin: 0;">
+          <li style="margin-bottom: 10px;">Our coaches will review your match video</li>
+          <li style="margin-bottom: 10px;">You'll receive an email with a link to book your review call</li>
+          <li style="margin-bottom: 10px;">After the call, we'll send your analysis folder via Google Drive</li>
+        </ol>
+        <p style="color: #666666; font-size: 14px; margin-top: 15px;"><strong>Turnaround time:</strong> 3-5 business days</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="background-color: #101012; padding: 30px 40px; text-align: center;">
+        <p style="color: #ffffff; margin: 0 0 15px 0; font-size: 16px; font-weight: 600;">Grande Sports Training</p>
+        <p style="color: rgba(255,255,255,0.5); margin: 0; font-size: 12px;">Questions? Contact us at td.grandesportstraining@gmail.com</p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+
+  const text = `GRANDE SPORTS - Match Analysis Submitted!\n\nThanks for submitting your match for analysis.\n\nSUBMISSION DETAILS:\n- Player: ${playerName}\n- Position: ${position}\n- Amount Paid: $${amount.toFixed(2)}\n\nWHAT HAPPENS NEXT:\n1. Our coaches will review your match video\n2. You'll receive an email with a link to book your review call\n3. After the call, we'll send your analysis folder via Google Drive\n\nTurnaround time: 3-5 business days\n\nQuestions? Contact us at td.grandesportstraining@gmail.com`
+
+  return sendBrevoEmail({
+    to,
+    subject: `Match Analysis Submitted - ${playerName}`,
+    htmlContent: html,
+    textContent: text,
+  })
+}
+
+interface MatchAnalysisAdminNotificationData {
+  playerName: string
+  position: string
+  jerseyNumber: string
+  jerseyColor?: string
+  videoUrl: string
+  contactEmail: string
+  additionalInfo?: string
+  amount: number
+}
+
+export async function sendMatchAnalysisAdminNotification(data: MatchAnalysisAdminNotificationData) {
+  const adminEmail = process.env.ADMIN_EMAIL || 'td.grandesportstraining@gmail.com'
+  const { playerName, position, jerseyNumber, jerseyColor, videoUrl, contactEmail, additionalInfo, amount } = data
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>New Match Analysis Submission</title>
+</head>
+<body style="margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f5f5;">
+  <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+    <div style="background-color: #067A3A; padding: 20px; text-align: center;">
+      <h1 style="color: #ffffff; margin: 0; font-size: 20px;">🎬 New Match Analysis</h1>
+    </div>
+    <div style="padding: 30px;">
+      <p style="color: #666; margin: 0 0 20px 0;">A new match analysis has been submitted and paid.</p>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr><td style="padding: 10px; border-bottom: 1px solid #eee; color: #666;">Player</td><td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold;">${playerName}</td></tr>
+        <tr><td style="padding: 10px; border-bottom: 1px solid #eee; color: #666;">Position</td><td style="padding: 10px; border-bottom: 1px solid #eee;">${position}</td></tr>
+        <tr><td style="padding: 10px; border-bottom: 1px solid #eee; color: #666;">Jersey</td><td style="padding: 10px; border-bottom: 1px solid #eee;">#${jerseyNumber}${jerseyColor ? ` (${jerseyColor})` : ''}</td></tr>
+        <tr><td style="padding: 10px; border-bottom: 1px solid #eee; color: #666;">Contact Email</td><td style="padding: 10px; border-bottom: 1px solid #eee;"><a href="mailto:${contactEmail}">${contactEmail}</a></td></tr>
+        <tr><td style="padding: 10px; border-bottom: 1px solid #eee; color: #666;">Amount</td><td style="padding: 10px; border-bottom: 1px solid #eee; color: #067A3A; font-weight: bold;">$${amount.toFixed(2)}</td></tr>
+      </table>
+      ${additionalInfo ? `<div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 8px;"><strong style="color: #333;">Additional Notes:</strong><p style="color: #666; margin: 10px 0 0 0;">${additionalInfo}</p></div>` : ''}
+      <div style="margin-top: 25px; text-align: center;">
+        <a href="${videoUrl}" target="_blank" style="display: inline-block; background-color: #067A3A; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold;">Watch Match Video</a>
+      </div>
+      <div style="margin-top: 25px; text-align: center;">
+        <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/match-analysis" style="display: inline-block; background-color: #101012; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px;">View in Dashboard</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`
+
+  const text = `NEW MATCH ANALYSIS SUBMISSION\n\nPlayer: ${playerName}\nPosition: ${position}\nJersey: #${jerseyNumber}${jerseyColor ? ` (${jerseyColor})` : ''}\nContact: ${contactEmail}\nAmount: $${amount.toFixed(2)}\n\nVideo: ${videoUrl}\n\n${additionalInfo ? `Notes: ${additionalInfo}` : ''}\n\nView in dashboard: ${process.env.NEXT_PUBLIC_APP_URL}/admin/match-analysis`
+
+  return sendBrevoEmail({
+    to: adminEmail,
+    subject: `🎬 New Match Analysis: ${playerName} - ${position}`,
+    htmlContent: html,
+    textContent: text,
+  })
+}
+
+interface AnalysisCompleteEmailData {
+  to: string
+  playerName: string
+  calendlyUrl: string
+}
+
+export async function sendAnalysisCompleteEmail(data: AnalysisCompleteEmailData) {
+  const { to, playerName, calendlyUrl } = data
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Your Match Analysis is Ready!</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f5f5;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+    <tr>
+      <td style="background-color: #067A3A; padding: 30px 40px; text-align: center;">
+        <img src="${process.env.NEXT_PUBLIC_APP_URL}/logo-email.png" alt="Grande Sports" style="height: 60px; width: auto;" />
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 40px 40px 20px 40px; text-align: center;">
+        <div style="display: inline-block; background-color: #e8f5e9; border-radius: 50%; width: 80px; height: 80px; line-height: 80px;">
+          <span style="font-size: 40px;">✅</span>
+        </div>
+        <h2 style="color: #067A3A; margin: 20px 0 10px 0; font-size: 24px;">Your Analysis is Ready!</h2>
+        <p style="color: #666666; margin: 0; font-size: 16px;">Hi! We've completed the analysis for ${playerName}.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 20px 40px;">
+        <p style="color: #666; font-size: 14px; line-height: 1.6;">The next step is to schedule a video call where we'll walk through the analysis together and discuss key areas for improvement.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 20px 40px; text-align: center;">
+        <a href="${calendlyUrl}" target="_blank" style="display: inline-block; background-color: #067A3A; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: bold;">Book Your Review Call</a>
+        <p style="color: #999; font-size: 12px; margin-top: 15px;">Click to choose a time that works for you</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="background-color: #101012; padding: 30px 40px; text-align: center;">
+        <p style="color: #ffffff; margin: 0 0 15px 0; font-size: 16px; font-weight: 600;">Grande Sports Training</p>
+        <p style="color: rgba(255,255,255,0.5); margin: 0; font-size: 12px;">Questions? Reply to this email.</p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+
+  const text = `YOUR MATCH ANALYSIS IS READY!\n\nHi! We've completed the analysis for ${playerName}.\n\nThe next step is to schedule a video call where we'll walk through the analysis together.\n\nBook your review call: ${calendlyUrl}\n\nQuestions? Reply to this email.`
+
+  return sendBrevoEmail({
+    to,
+    subject: `Your Match Analysis is Ready - Book Your Review Call`,
+    htmlContent: html,
+    textContent: text,
+  })
+}
+
+interface DeliveryEmailData {
+  to: string
+  playerName: string
+  deliveryFolderUrl: string
+}
+
+export async function sendDeliveryEmail(data: DeliveryEmailData) {
+  const { to, playerName, deliveryFolderUrl } = data
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Your Match Analysis Materials</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f5f5;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+    <tr>
+      <td style="background-color: #067A3A; padding: 30px 40px; text-align: center;">
+        <img src="${process.env.NEXT_PUBLIC_APP_URL}/logo-email.png" alt="Grande Sports" style="height: 60px; width: auto;" />
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 40px 40px 20px 40px; text-align: center;">
+        <div style="display: inline-block; background-color: #e8f5e9; border-radius: 50%; width: 80px; height: 80px; line-height: 80px;">
+          <span style="font-size: 40px;">📁</span>
+        </div>
+        <h2 style="color: #067A3A; margin: 20px 0 10px 0; font-size: 24px;">Your Analysis Materials</h2>
+        <p style="color: #666666; margin: 0; font-size: 16px;">Here's everything from your match analysis for ${playerName}.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 20px 40px; text-align: center;">
+        <a href="${deliveryFolderUrl}" target="_blank" style="display: inline-block; background-color: #067A3A; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: bold;">Open Google Drive Folder</a>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 20px 40px;">
+        <p style="color: #666; font-size: 14px; line-height: 1.6;">Your folder contains all the analysis materials we discussed during your review call. Feel free to revisit these anytime and share with your coach if needed.</p>
+        <p style="color: #666; font-size: 14px;">Thank you for choosing Grande Sports Training!</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="background-color: #101012; padding: 30px 40px; text-align: center;">
+        <p style="color: #ffffff; margin: 0 0 15px 0; font-size: 16px; font-weight: 600;">Grande Sports Training</p>
+        <p style="color: rgba(255,255,255,0.5); margin: 0; font-size: 12px;">Questions? Reply to this email.</p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+
+  const text = `YOUR MATCH ANALYSIS MATERIALS\n\nHere's everything from your match analysis for ${playerName}.\n\nOpen your Google Drive folder: ${deliveryFolderUrl}\n\nYour folder contains all the analysis materials we discussed during your review call.\n\nThank you for choosing Grande Sports Training!\n\nQuestions? Reply to this email.`
+
+  return sendBrevoEmail({
+    to,
+    subject: `Your Match Analysis Materials - ${playerName}`,
+    htmlContent: html,
+    textContent: text,
+  })
+}
+
 interface SessionAssignedEmailData {
   to: string
   athleteName: string

@@ -220,3 +220,85 @@ export const PACKAGE_OPTIONS = [
     popular: false,
   },
 ] as const
+
+// ============================================
+// MATCH ANALYSIS TYPES
+// ============================================
+
+export type AnalysisStatus =
+  | 'not-started'
+  | 'in-progress'
+  | 'analysis-complete'
+  | 'meeting-scheduled'
+  | 'delivered'
+
+export type AnalysisPaymentType = 'single' | 'subscription'
+
+export interface MatchAnalysis {
+  id: string
+
+  // Form fields (matches intake form)
+  email_address: string
+  contact_email: string
+  player_name: string
+  jersey_number: string
+  jersey_color?: string
+  position: string
+  additional_info?: string
+  video_url: string
+
+  // User link (if they have an account)
+  user_id?: string
+
+  // Payment
+  payment_type: AnalysisPaymentType
+  amount: number
+  stripe_payment_intent_id?: string
+  stripe_checkout_session_id?: string
+  payment_status: 'pending' | 'paid' | 'refunded' | 'failed'
+
+  // Status
+  status: AnalysisStatus
+
+  // Meeting tracking
+  meeting_booked_at?: string
+  calendly_event_url?: string
+
+  // Admin tracking
+  fulfillment_date?: string
+  admin_notes?: string
+  delivery_folder_url?: string
+
+  created_at: string
+  updated_at: string
+}
+
+export interface MatchAnalysisSubscription {
+  id: string
+  user_id: string
+  stripe_subscription_id: string
+  stripe_customer_id: string
+  credits_total: number
+  credits_used: number
+  status: 'active' | 'cancelled' | 'past_due' | 'expired'
+  current_period_start: string
+  current_period_end: string
+  created_at: string
+  updated_at: string
+}
+
+// Match Analysis pricing constants
+export const MATCH_ANALYSIS_PRICING = {
+  single: 140,
+  subscription_monthly: 500,
+  subscription_credits: 4,
+} as const
+
+// Status labels for display
+export const ANALYSIS_STATUS_LABELS: Record<AnalysisStatus, string> = {
+  'not-started': 'Not Started',
+  'in-progress': 'In Progress',
+  'analysis-complete': 'Analysis Complete',
+  'meeting-scheduled': 'Meeting Scheduled',
+  'delivered': 'Delivered',
+} as const

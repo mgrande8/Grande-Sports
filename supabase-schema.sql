@@ -328,6 +328,146 @@ CREATE INDEX IF NOT EXISTS idx_technical_tests_user ON public.technical_tests(us
 CREATE INDEX IF NOT EXISTS idx_messages_recipient ON public.messages(recipient_id);
 CREATE INDEX IF NOT EXISTS idx_discount_codes_code ON public.discount_codes(code);
 
+-- ============================================
+-- MATCH ANALYSIS MODULE
+-- ============================================
+
+-- Match Analysis requests table
+CREATE TABLE public.match_analyses (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+
+  -- Client Information (from intake form)
+  email_address TEXT NOT NULL,
+  contact_email TEXT NOT NULL,
+  player_name TEXT NOT NULL,
+  jersey_number TEXT NOT NULL,
+  jersey_color TEXT,
+  position TEXT NOT NULL,
+  additional_info TEXT,
+  video_url TEXT NOT NULL,
+
+  -- Link to registered user (if they have an account)
+  user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+
+  -- Payment
+  payment_type TEXT NOT NULL CHECK (payment_type IN ('single', 'subscription')),
+  amount DECIMAL(10,2) NOT NULL,
+  stripe_payment_intent_id TEXT,
+  stripe_checkout_session_id TEXT,
+  payment_status TEXT NOT NULL DEFAULT 'pending' CHECK (payment_status IN ('pending', 'paid', 'refunded', 'failed')),
+
+  -- Workflow Status
+  status TEXT NOT NULL DEFAULT 'not-started' CHECK (status IN (
+    'not-started',
+    'in-progress',
+    'analysis-complete',
+    'meeting-scheduled',
+    'delivered'
+  )),
+
+  -- Meeting tracking
+  meeting_booked_at TIMESTAMP WITH TIME ZONE,
+  calendly_event_url TEXT,
+
+  -- Admin tracking
+  fulfillment_date DATE,
+  admin_notes TEXT,
+  delivery_folder_url TEXT,
+
+  -- Timestamps
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Match Analysis Subscriptions (for $500/month plan)
+CREATE TABLE public.match_analysis_subscriptions (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+
+  -- Stripe
+  stripe_subscription_id TEXT NOT NULL UNIQUE,
+  stripe_customer_id TEXT NOT NULL,
+
+  -- Credits (4 per month)
+  credits_total INTEGER NOT NULL DEFAULT 4,
+  credits_used INTEGER NOT NULL DEFAULT 0,
+
+  -- Status
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'cancelled', 'past_due', 'expired')),
+  current_period_start TIMESTAMP WITH TIME ZONE NOT NULL,
+  current_period_end TIMESTAMP WITH TIME ZONE NOT NULL,
+
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+  UNIQUE(user_id)
+);
+
+-- Enable RLS
+ALTER TABLE public.match_analyses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.match_analysis_subscriptions ENABLE ROW LEVEL SECURITY;
+
+-- Match Analyses policies
+
+-- Anyone can insert when payment is confirmed (via service role from webhook/API)
+CREATE POLICY "Service role can insert match analyses" ON public.match_analyses
+  FOR INSERT WITH CHECK (true);
+
+-- Users can view their own analyses (by user_id or email match)
+CREATE POLICY "Users view own analyses" ON public.match_analyses
+  FOR SELECT USING (
+    auth.uid() = user_id OR
+    contact_email = (SELECT email FROM public.profiles WHERE id = auth.uid())
+  );
+
+-- Admins can do everything
+CREATE POLICY "Admins full access to match analyses" ON public.match_analyses
+  FOR ALL USING (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true)
+  );
+
+-- Match Analysis Subscriptions policies
+
+-- Users can view their own subscription
+CREATE POLICY "Users view own analysis subscription" ON public.match_analysis_subscriptions
+  FOR SELECT USING (auth.uid() = user_id);
+
+-- Admins can do everything
+CREATE POLICY "Admins full access to analysis subscriptions" ON public.match_analysis_subscriptions
+  FOR ALL USING (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true)
+  );
+
+-- Indexes for match_analyses
+CREATE INDEX IF NOT EXISTS idx_match_analyses_status ON public.match_analyses(status);
+CREATE INDEX IF NOT EXISTS idx_match_analyses_user ON public.match_analyses(user_id);
+CREATE INDEX IF NOT EXISTS idx_match_analyses_email ON public.match_analyses(contact_email);
+CREATE INDEX IF NOT EXISTS idx_match_analyses_created ON public.match_analyses(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_match_analyses_payment_status ON public.match_analyses(payment_status);
+
+-- Indexes for subscriptions
+CREATE INDEX IF NOT EXISTS idx_analysis_subs_user ON public.match_analysis_subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_analysis_subs_status ON public.match_analysis_subscriptions(status);
+
+-- Function to update match_analyses updated_at
+CREATE OR REPLACE FUNCTION public.update_match_analysis_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger for updated_at
+DROP TRIGGER IF EXISTS on_match_analysis_update ON public.match_analyses;
+CREATE TRIGGER on_match_analysis_update
+  BEFORE UPDATE ON public.match_analyses
+  FOR EACH ROW EXECUTE FUNCTION public.update_match_analysis_updated_at();
+
+-- ============================================
+-- END MATCH ANALYSIS MODULE
+-- ============================================
+
 -- Insert yourself as admin (replace with your actual email after you sign up)
 -- Run this AFTER you create your account:
 -- UPDATE public.profiles SET is_admin = true WHERE email = 'your-email@example.com';
