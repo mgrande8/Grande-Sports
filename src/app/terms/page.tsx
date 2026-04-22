@@ -123,8 +123,7 @@ export default function TermsPage() {
                 </p>
                 <p className="mt-2">
                   <strong>Grande Sports Training, LLC</strong><br />
-                  Email: info@grandesportstraining.com<br />
-                  Phone: (301) 917-7577
+                  Email: info@grandesportstraining.com
                 </p>
               </section>
 
