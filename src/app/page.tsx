@@ -255,9 +255,9 @@ export default function HomePage() {
                   Get Match Analysis - $140
                   <ArrowRight size={18} />
                 </Link>
-                <a href="https://grandesportstraining.com/products/personalized-tactical-online-coaching-monthly" target="_blank" rel="noopener noreferrer" className="btn-secondary text-center">
+                <Link href="/match-analysis/subscribe" className="btn-secondary text-center">
                   Monthly Plan - $500/mo
-                </a>
+                </Link>
               </div>
             </div>
             <div className="relative">
