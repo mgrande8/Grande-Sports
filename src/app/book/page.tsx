@@ -362,6 +362,12 @@ export default function BookPage() {
                 >
                   Get Directions →
                 </a>
+                <p className="text-sm text-gs-gray-600 mt-2">
+                  <span className="font-medium">Want training at your location?</span> Available based on schedule with a $25 travel fee.{' '}
+                  <a href="mailto:info@grandesportstraining.com?subject=Training at My Location" className="text-gs-green hover:underline">
+                    Contact us
+                  </a>
+                </p>
               </div>
             </div>
           </div>
