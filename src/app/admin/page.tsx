@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import { PageLoader } from '@/components/LoadingSpinner'
 import { formatCurrency, formatDate, getSessionTypeLabel, getSessionTypeColor, cn } from '@/lib/utils'
-import { Calendar, Users, DollarSign, Tag, CreditCard, Gift, ArrowRight, Video } from 'lucide-react'
+import { Calendar, Users, DollarSign, Tag, CreditCard, Gift, ArrowRight, Video, Zap, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { format, startOfMonth, endOfMonth } from 'date-fns'
 
@@ -29,6 +29,7 @@ export default function AdminPage() {
     pendingCredits: 0,
   })
   const [recentTransactions, setRecentTransactions] = useState<RecentTransaction[]>([])
+  const [generating, setGenerating] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -290,6 +291,42 @@ export default function AdminPage() {
                     </div>
                   </div>
                 </Link>
+
+                <button
+                  onClick={async () => {
+                    setGenerating(true)
+                    try {
+                      const response = await fetch('/api/admin/generate-sessions', { method: 'POST' })
+                      const data = await response.json()
+                      if (data.error) {
+                        alert(data.error)
+                      } else {
+                        alert(data.message)
+                        // Refresh stats
+                        fetchStats()
+                      }
+                    } catch (error) {
+                      alert('Failed to generate sessions')
+                    }
+                    setGenerating(false)
+                  }}
+                  disabled={generating}
+                  className="card hover:shadow-md transition-shadow group border-2 border-gs-green bg-gs-green/5 text-left disabled:opacity-50"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-gs-green rounded-lg flex items-center justify-center group-hover:bg-green-700 transition-colors">
+                      {generating ? (
+                        <Loader2 className="text-white animate-spin" size={28} />
+                      ) : (
+                        <Zap className="text-white" size={28} />
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg">{generating ? 'Generating...' : 'Generate Sessions'}</h3>
+                      <p className="text-gs-gray-600 text-sm">Auto-fill next 30 days</p>
+                    </div>
+                  </div>
+                </button>
               </div>
             </div>
 

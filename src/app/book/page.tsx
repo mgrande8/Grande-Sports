@@ -116,8 +116,8 @@ export default function BookPage() {
         // Saturday/Sunday: Only 9am-11am (540-660 minutes)
         return timeInMinutes >= 540 && timeInMinutes < 660
       } else {
-        // Monday-Friday: 8am-11am (480-660) OR 3:30pm-5:30pm (930-1050)
-        const isMorning = timeInMinutes >= 480 && timeInMinutes < 660
+        // Monday-Friday: 8am-12pm (480-720) OR 3:30pm-5:30pm (930-1050)
+        const isMorning = timeInMinutes >= 480 && timeInMinutes < 720
         const isAfternoon = timeInMinutes >= 930 && timeInMinutes < 1050
         return isMorning || isAfternoon
       }
