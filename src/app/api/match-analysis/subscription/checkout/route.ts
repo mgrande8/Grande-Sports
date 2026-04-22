@@ -53,7 +53,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Create Stripe Checkout session for subscription
-    const priceId = process.env.STRIPE_MATCH_ANALYSIS_PRICE_ID
+    // Fallback to hardcoded price ID if env var not working (temporary fix for launch)
+    const priceId = process.env.STRIPE_MATCH_ANALYSIS_PRICE_ID || 'price_1TOrMDFooJJWubcH4fyNJoEf'
+
+    // Debug logging
+    console.log('STRIPE_MATCH_ANALYSIS_PRICE_ID from env:', process.env.STRIPE_MATCH_ANALYSIS_PRICE_ID)
+    console.log('Using priceId:', priceId)
 
     if (!priceId) {
       console.error('STRIPE_MATCH_ANALYSIS_PRICE_ID not configured')
