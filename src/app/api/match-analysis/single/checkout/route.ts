@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { MATCH_ANALYSIS_PRICING } from '@/lib/types'
 
+export const dynamic = 'force-dynamic'
+
 interface CheckoutBody {
   email_address: string
   contact_email: string

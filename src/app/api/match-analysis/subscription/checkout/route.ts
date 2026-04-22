@@ -3,6 +3,8 @@ import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supab
 import { stripe } from '@/lib/stripe'
 import { MATCH_ANALYSIS_PRICING } from '@/lib/types'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     // User must be logged in

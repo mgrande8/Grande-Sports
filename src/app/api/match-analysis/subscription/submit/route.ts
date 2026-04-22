@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supabase-server'
 import { sendMatchAnalysisConfirmationEmail, sendMatchAnalysisAdminNotification } from '@/lib/email'
 
+export const dynamic = 'force-dynamic'
+
 interface SubmitBody {
   player_name: string
   jersey_number: string

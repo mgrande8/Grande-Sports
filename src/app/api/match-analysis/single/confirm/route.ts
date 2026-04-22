@@ -3,6 +3,8 @@ import { stripe } from '@/lib/stripe'
 import { createServiceRoleClient } from '@/lib/supabase-server'
 import { sendMatchAnalysisConfirmationEmail, sendMatchAnalysisAdminNotification } from '@/lib/email'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
