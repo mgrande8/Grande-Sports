@@ -65,8 +65,8 @@ export default function TermsPage() {
                   All session purchases are final. <strong>No refunds will be issued under any circumstances.</strong>{' '}
                   If you cannot make a scheduled session, you may reschedule by contacting us at least 24 hours
                   in advance. Cancellations made less than 24 hours before a scheduled session will forfeit the
-                  session with no reschedule option. In case of inclement weather (heavy rain, lightning, or
-                  unsafe conditions), sessions will be rescheduled at no additional cost.
+                  session, unless there is an emergency (subject to approval). In case of inclement weather
+                  (heavy rain, lightning, or unsafe conditions), sessions will be rescheduled at no additional cost.
                 </p>
               </section>
 

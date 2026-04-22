@@ -324,7 +324,7 @@ export default function HomePage() {
             </div>
             <div className="flex items-start gap-3">
               <CheckCircle size={18} className="text-gs-green mt-0.5 shrink-0" />
-              <p><strong>Reschedules Only.</strong> If you cannot make a session, you may reschedule by contacting us at least 24 hours in advance.</p>
+              <p><strong>Reschedules Only.</strong> If you cannot make a session, you may reschedule by contacting us at least 24 hours in advance. Reschedules within 24 hours are only accepted in case of emergency.</p>
             </div>
             <div className="flex items-start gap-3">
               <CheckCircle size={18} className="text-gs-green mt-0.5 shrink-0" />
