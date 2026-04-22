@@ -51,6 +51,51 @@ interface BookingEmailData {
   coachName?: string
 }
 
+export async function sendBookingAdminNotification(data: BookingEmailData & { userEmail: string }) {
+  const adminEmail = process.env.ADMIN_EMAIL || 'info@grandesportstraining.com'
+  const { athleteName, sessionTitle, sessionDate, sessionTime, sessionLocation, amountPaid, coachName, userEmail } = data
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>New Booking</title>
+</head>
+<body style="margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f5f5;">
+  <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+    <div style="background-color: #067A3A; padding: 20px; text-align: center;">
+      <h1 style="color: #ffffff; margin: 0; font-size: 20px;">New Session Booking</h1>
+    </div>
+    <div style="padding: 30px;">
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr><td style="padding: 10px; border-bottom: 1px solid #eee; color: #666;">Athlete</td><td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold;">${athleteName}</td></tr>
+        <tr><td style="padding: 10px; border-bottom: 1px solid #eee; color: #666;">Email</td><td style="padding: 10px; border-bottom: 1px solid #eee;"><a href="mailto:${userEmail}">${userEmail}</a></td></tr>
+        <tr><td style="padding: 10px; border-bottom: 1px solid #eee; color: #666;">Session</td><td style="padding: 10px; border-bottom: 1px solid #eee;">${sessionTitle}</td></tr>
+        ${coachName ? `<tr><td style="padding: 10px; border-bottom: 1px solid #eee; color: #666;">Coach</td><td style="padding: 10px; border-bottom: 1px solid #eee;">${coachName}</td></tr>` : ''}
+        <tr><td style="padding: 10px; border-bottom: 1px solid #eee; color: #666;">Date</td><td style="padding: 10px; border-bottom: 1px solid #eee;">${sessionDate}</td></tr>
+        <tr><td style="padding: 10px; border-bottom: 1px solid #eee; color: #666;">Time</td><td style="padding: 10px; border-bottom: 1px solid #eee;">${sessionTime}</td></tr>
+        <tr><td style="padding: 10px; border-bottom: 1px solid #eee; color: #666;">Location</td><td style="padding: 10px; border-bottom: 1px solid #eee;">${sessionLocation}</td></tr>
+        <tr><td style="padding: 10px; border-bottom: 1px solid #eee; color: #666;">Amount</td><td style="padding: 10px; border-bottom: 1px solid #eee; color: #067A3A; font-weight: bold;">${amountPaid > 0 ? `$${amountPaid.toFixed(2)}` : 'Free Session'}</td></tr>
+      </table>
+      <div style="margin-top: 25px; text-align: center;">
+        <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin" style="display: inline-block; background-color: #101012; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px;">View in Dashboard</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`
+
+  const text = `NEW SESSION BOOKING\n\nAthlete: ${athleteName}\nEmail: ${userEmail}\nSession: ${sessionTitle}${coachName ? `\nCoach: ${coachName}` : ''}\nDate: ${sessionDate}\nTime: ${sessionTime}\nLocation: ${sessionLocation}\nAmount: ${amountPaid > 0 ? `$${amountPaid.toFixed(2)}` : 'Free Session'}\n\nView in dashboard: ${process.env.NEXT_PUBLIC_APP_URL}/admin`
+
+  return sendBrevoEmail({
+    to: adminEmail,
+    subject: `New Booking: ${athleteName} - ${sessionTitle} on ${sessionDate}`,
+    htmlContent: html,
+    textContent: text,
+  })
+}
+
 export async function sendBookingConfirmationEmail(data: BookingEmailData) {
   const { to, athleteName, sessionTitle, sessionDate, sessionTime, sessionLocation, amountPaid, coachName } = data
 

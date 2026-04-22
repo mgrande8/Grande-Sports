@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { createServiceRoleClient } from '@/lib/supabase-server'
-import { sendBookingConfirmationEmail } from '@/lib/email'
+import { sendBookingConfirmationEmail, sendBookingAdminNotification } from '@/lib/email'
 import { formatDate, formatTime } from '@/lib/utils'
 import Stripe from 'stripe'
 
@@ -88,6 +88,7 @@ export async function POST(request: NextRequest) {
       const user = userResult.data
 
       try {
+        // Send confirmation to client
         await sendBookingConfirmationEmail({
           to: user.email,
           athleteName: user.full_name,
@@ -99,6 +100,20 @@ export async function POST(request: NextRequest) {
           coachName: session.coach_name || undefined,
         })
         console.log('Confirmation email sent to:', user.email)
+
+        // Send notification to admin
+        await sendBookingAdminNotification({
+          to: user.email,
+          userEmail: user.email,
+          athleteName: user.full_name,
+          sessionTitle: session.title,
+          sessionDate: formatDate(session.date),
+          sessionTime: formatTime(session.start_time),
+          sessionLocation: session.location || 'Bamford Park, Davie, FL 33314',
+          amountPaid: (checkoutSession.amount_total || 0) / 100,
+          coachName: session.coach_name || undefined,
+        })
+        console.log('Admin notification sent')
       } catch (emailError) {
         console.error('Failed to send confirmation email:', emailError)
       }

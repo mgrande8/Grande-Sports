@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supabase-server'
 import { stripe } from '@/lib/stripe'
 import { calculateDiscountedPrice, formatDate, formatTime } from '@/lib/utils'
-import { sendBookingConfirmationEmail } from '@/lib/email'
+import { sendBookingConfirmationEmail, sendBookingAdminNotification } from '@/lib/email'
 import { REFERRAL_DISCOUNT } from '@/lib/types'
 
 // POST - Pay with a saved payment method
@@ -134,6 +134,19 @@ export async function POST(request: NextRequest) {
           amountPaid: 0,
           coachName: session.coach_name || undefined,
         })
+
+        // Send admin notification
+        await sendBookingAdminNotification({
+          to: profile.email,
+          userEmail: profile.email,
+          athleteName: profile.full_name,
+          sessionTitle: session.title,
+          sessionDate: formatDate(session.date),
+          sessionTime: formatTime(session.start_time),
+          sessionLocation: session.location || 'Bamford Park, Davie, FL 33314',
+          amountPaid: 0,
+          coachName: session.coach_name || undefined,
+        })
       }
 
       return NextResponse.json({ success: true })
@@ -207,6 +220,19 @@ export async function POST(request: NextRequest) {
       if (userProfile) {
         await sendBookingConfirmationEmail({
           to: userProfile.email,
+          athleteName: userProfile.full_name,
+          sessionTitle: session.title,
+          sessionDate: formatDate(session.date),
+          sessionTime: formatTime(session.start_time),
+          sessionLocation: session.location || 'Bamford Park, Davie, FL 33314',
+          amountPaid: finalPrice,
+          coachName: session.coach_name || undefined,
+        })
+
+        // Send admin notification
+        await sendBookingAdminNotification({
+          to: userProfile.email,
+          userEmail: userProfile.email,
           athleteName: userProfile.full_name,
           sessionTitle: session.title,
           sessionDate: formatDate(session.date),
