@@ -60,12 +60,13 @@ export default function TermsPage() {
               </section>
 
               <section>
-                <h2 className="text-xl font-semibold text-gs-black mb-3">4. Cancellation Policy</h2>
+                <h2 className="text-xl font-semibold text-gs-black mb-3">4. No Refunds & Cancellation Policy</h2>
                 <p>
-                  Sessions may be cancelled or rescheduled with at least 24 hours notice for a full refund or
-                  credit. Cancellations made less than 24 hours before a scheduled session are non-refundable.
-                  In case of inclement weather (heavy rain, lightning, or unsafe conditions), sessions will be
-                  rescheduled at no additional cost.
+                  All session purchases are final. <strong>No refunds will be issued under any circumstances.</strong>{' '}
+                  If you cannot make a scheduled session, you may reschedule by contacting us at least 24 hours
+                  in advance. Cancellations made less than 24 hours before a scheduled session will forfeit the
+                  session with no reschedule option. In case of inclement weather (heavy rain, lightning, or
+                  unsafe conditions), sessions will be rescheduled at no additional cost.
                 </p>
               </section>
 
