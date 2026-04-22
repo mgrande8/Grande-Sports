@@ -128,8 +128,8 @@ export default function MatchAnalysisSuccessPage() {
 
                 <p className="text-sm text-gs-gray-500">
                   If you've been charged, please contact us at{' '}
-                  <a href="mailto:td.grandesportstraining@gmail.com" className="text-gs-green">
-                    td.grandesportstraining@gmail.com
+                  <a href="mailto:info@grandesportstraining.com" className="text-gs-green">
+                    info@grandesportstraining.com
                   </a>
                 </p>
               </div>

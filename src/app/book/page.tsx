@@ -9,7 +9,7 @@ import LoadingSpinner from '@/components/LoadingSpinner'
 import { Session, POSITION_OPTIONS, LEVEL_OPTIONS, GOALS_OPTIONS, REFERRAL_SOURCE_OPTIONS, REFERRAL_DISCOUNT, PACKAGE_OPTIONS } from '@/lib/types'
 import { formatCurrency, calculateDiscountedPrice } from '@/lib/utils'
 import { format, addDays, startOfDay, addMonths } from 'date-fns'
-import { Calendar, Tag, CreditCard, ArrowRight, ArrowLeft, Wallet, MapPin, User, Package, Mail } from 'lucide-react'
+import { Calendar, Tag, CreditCard, ArrowRight, ArrowLeft, Wallet, MapPin, User, Package, Mail, CloudRain } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -102,6 +102,28 @@ export default function BookPage() {
     setLoadingPaymentMethods(false)
   }
 
+  // Filter sessions to only show within available time windows
+  const filterByAvailability = (sessions: Session[], date: Date) => {
+    const dayOfWeek = date.getDay() // 0 = Sunday, 6 = Saturday
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+
+    return sessions.filter(session => {
+      const startTime = session.start_time // Format: "HH:MM:SS" or "HH:MM"
+      const [hours, minutes] = startTime.split(':').map(Number)
+      const timeInMinutes = hours * 60 + minutes
+
+      if (isWeekend) {
+        // Saturday/Sunday: Only 9am-11am (540-660 minutes)
+        return timeInMinutes >= 540 && timeInMinutes < 660
+      } else {
+        // Monday-Friday: 8am-11am (480-660) OR 3:30pm-5:30pm (930-1050)
+        const isMorning = timeInMinutes >= 480 && timeInMinutes < 660
+        const isAfternoon = timeInMinutes >= 930 && timeInMinutes < 1050
+        return isMorning || isAfternoon
+      }
+    })
+  }
+
   const fetchSessions = async () => {
     setLoading(true)
     const dateStr = format(selectedDate, 'yyyy-MM-dd')
@@ -109,7 +131,9 @@ export default function BookPage() {
       const response = await fetch(`/api/sessions?date=${dateStr}`)
       const data = await response.json()
       if (data.sessions) {
-        setSessions(data.sessions)
+        // Filter sessions by availability windows
+        const filteredSessions = filterByAvailability(data.sessions, selectedDate)
+        setSessions(filteredSessions)
       }
     } catch (error) {
       console.error('Failed to fetch sessions:', error)
@@ -307,7 +331,7 @@ export default function BookPage() {
                   <p className="text-xs text-gs-gray-600 mt-2">{pkg.description}</p>
                   {pkg.sessions !== '1' ? (
                     <a
-                      href={`mailto:td.grandesportstraining@gmail.com?subject=Package Inquiry - ${pkg.name}`}
+                      href={`mailto:info@grandesportstraining.com?subject=Package Inquiry - ${pkg.name}`}
                       className="btn-secondary text-xs mt-3 inline-flex items-center gap-1"
                     >
                       <Mail size={12} />
@@ -338,6 +362,20 @@ export default function BookPage() {
                 >
                   Get Directions →
                 </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Rain Policy */}
+          <div className="card mb-6 bg-blue-50 border-blue-200">
+            <div className="flex items-start gap-3">
+              <CloudRain className="text-blue-600 mt-0.5 flex-shrink-0" size={20} />
+              <div>
+                <h3 className="font-semibold text-gs-black">Rain Policy</h3>
+                <p className="text-sm text-gs-gray-600 mt-1">
+                  Training continues in light rain — we train through it! In case of heavy rain, lightning, or unsafe conditions,
+                  you'll receive an email notification and your session will be rescheduled at no extra cost.
+                </p>
               </div>
             </div>
           </div>

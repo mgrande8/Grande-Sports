@@ -10,14 +10,28 @@ export default function HomePage() {
       <Header />
 
       {/* Hero Section */}
-      <section className="bg-gs-black text-gs-white py-20 lg:py-32">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative text-gs-white py-24 lg:py-40 overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <Image
+            src="/images/hero-bg.jpg"
+            alt="Soccer training"
+            fill
+            className="object-cover object-center"
+            priority
+          />
+          {/* Dark Overlay */}
+          <div className="absolute inset-0 bg-black/70" />
+        </div>
+
+        {/* Content */}
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
             <h1 className="text-4xl lg:text-6xl font-bold mb-6">
-              Book Your Training Session
+              Elevate Your Game
             </h1>
-            <p className="text-xl text-gs-gray-400 mb-8">
-              Private, semi-private, and group soccer training sessions in Davie, FL. 
+            <p className="text-xl text-gs-gray-300 mb-8">
+              Private, semi-private, and group soccer training sessions in Davie, FL.
               Book online, pay securely, and track your progress.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
@@ -173,7 +187,7 @@ export default function HomePage() {
               <p className="text-xs text-gs-gray-500">$80/session</p>
               <span className="inline-block bg-gs-green/10 text-gs-green text-xs font-semibold px-2 py-0.5 rounded mt-2">Save $180</span>
               <p className="text-sm text-gs-gray-600 mt-3">Twelve private training sessions. Must be used within 45 days of purchase.</p>
-              <a href="mailto:td.grandesportstraining@gmail.com?subject=Package Inquiry - 12-Session Pack" className="btn-green mt-4 inline-block text-sm">Contact Us</a>
+              <a href="mailto:info@grandesportstraining.com?subject=Package Inquiry - 12-Session Pack" className="btn-green mt-4 inline-block text-sm">Contact Us</a>
             </div>
             <div className="card text-center">
               <h3 className="font-bold text-lg">8-Session Pack</h3>
@@ -181,7 +195,7 @@ export default function HomePage() {
               <p className="text-xs text-gs-gray-500">$85/session</p>
               <span className="inline-block bg-gs-green/10 text-gs-green text-xs font-semibold px-2 py-0.5 rounded mt-2">Save $80</span>
               <p className="text-sm text-gs-gray-600 mt-3">Eight private training sessions. Must be used within 45 days of purchase.</p>
-              <a href="mailto:td.grandesportstraining@gmail.com?subject=Package Inquiry - 8-Session Pack" className="btn-secondary mt-4 inline-block text-sm">Contact Us</a>
+              <a href="mailto:info@grandesportstraining.com?subject=Package Inquiry - 8-Session Pack" className="btn-secondary mt-4 inline-block text-sm">Contact Us</a>
             </div>
             <div className="card text-center">
               <h3 className="font-bold text-lg">4-Session Pack</h3>
@@ -189,7 +203,7 @@ export default function HomePage() {
               <p className="text-xs text-gs-gray-500">$90/session</p>
               <span className="inline-block bg-gs-green/10 text-gs-green text-xs font-semibold px-2 py-0.5 rounded mt-2">Save $20</span>
               <p className="text-sm text-gs-gray-600 mt-3">Four private training sessions. Must be used within 45 days of purchase.</p>
-              <a href="mailto:td.grandesportstraining@gmail.com?subject=Package Inquiry - 4-Session Pack" className="btn-secondary mt-4 inline-block text-sm">Contact Us</a>
+              <a href="mailto:info@grandesportstraining.com?subject=Package Inquiry - 4-Session Pack" className="btn-secondary mt-4 inline-block text-sm">Contact Us</a>
             </div>
             <div className="card text-center">
               <h3 className="font-bold text-lg">Single Session</h3>
@@ -241,9 +255,9 @@ export default function HomePage() {
                   Get Match Analysis - $140
                   <ArrowRight size={18} />
                 </Link>
-                <Link href="/match-analysis/subscribe" className="btn-secondary text-center">
+                <a href="https://grandesportstraining.com/products/personalized-tactical-online-coaching-monthly" target="_blank" rel="noopener noreferrer" className="btn-secondary text-center">
                   Monthly Plan - $500/mo
-                </Link>
+                </a>
               </div>
             </div>
             <div className="relative">

@@ -113,14 +113,14 @@ export async function sendBookingConfirmationEmail(data: BookingEmailData) {
           <a href="https://www.instagram.com/grandesportstraining/" target="_blank" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/512/174/174855.png" alt="Instagram" style="width: 28px; height: 28px;" /></a>
           <a href="https://www.tiktok.com/@grandesportstraining" target="_blank" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/512/3046/3046121.png" alt="TikTok" style="width: 28px; height: 28px;" /></a>
         </div>
-        <p style="color: rgba(255,255,255,0.5); margin: 0; font-size: 12px;">Questions? Reply to this email or contact us at<br>td.grandesportstraining@gmail.com</p>
+        <p style="color: rgba(255,255,255,0.5); margin: 0; font-size: 12px;">Questions? Reply to this email or contact us at<br>info@grandesportstraining.com</p>
       </td>
     </tr>
   </table>
 </body>
 </html>`
 
-  const text = `GRANDE SPORTS - Booking Confirmed!\n\nHi ${athleteName},\n\nYour training session has been booked.\n\nSession: ${sessionTitle}${coachName ? `\nCoach: ${coachName}` : ''}\nDate: ${sessionDate}\nTime: ${sessionTime}\nLocation: ${sessionLocation}\nParking: Free on-site\nAmount: ${amountPaid > 0 ? `$${amountPaid.toFixed(2)}` : 'Free Session'}\n\nPlease arrive 10 minutes early. Cancellations must be made at least 24 hours in advance.\n\nView your sessions: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard\n\nQuestions? td.grandesportstraining@gmail.com`
+  const text = `GRANDE SPORTS - Booking Confirmed!\n\nHi ${athleteName},\n\nYour training session has been booked.\n\nSession: ${sessionTitle}${coachName ? `\nCoach: ${coachName}` : ''}\nDate: ${sessionDate}\nTime: ${sessionTime}\nLocation: ${sessionLocation}\nParking: Free on-site\nAmount: ${amountPaid > 0 ? `$${amountPaid.toFixed(2)}` : 'Free Session'}\n\nPlease arrive 10 minutes early. Cancellations must be made at least 24 hours in advance.\n\nView your sessions: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard\n\nQuestions? info@grandesportstraining.com`
 
   return sendBrevoEmail({
     to,
@@ -195,14 +195,14 @@ export async function sendMatchAnalysisConfirmationEmail(data: MatchAnalysisConf
     <tr>
       <td style="background-color: #101012; padding: 30px 40px; text-align: center;">
         <p style="color: #ffffff; margin: 0 0 15px 0; font-size: 16px; font-weight: 600;">Grande Sports Training</p>
-        <p style="color: rgba(255,255,255,0.5); margin: 0; font-size: 12px;">Questions? Contact us at td.grandesportstraining@gmail.com</p>
+        <p style="color: rgba(255,255,255,0.5); margin: 0; font-size: 12px;">Questions? Contact us at info@grandesportstraining.com</p>
       </td>
     </tr>
   </table>
 </body>
 </html>`
 
-  const text = `GRANDE SPORTS - Match Analysis Submitted!\n\nThanks for submitting your match for analysis.\n\nSUBMISSION DETAILS:\n- Player: ${playerName}\n- Position: ${position}\n- Amount Paid: $${amount.toFixed(2)}\n\nWHAT HAPPENS NEXT:\n1. Our coaches will review your match video\n2. You'll receive an email with a link to book your review call\n3. After the call, we'll send your analysis folder via Google Drive\n\nTurnaround time: 48-72 hours\n\nQuestions? Contact us at td.grandesportstraining@gmail.com`
+  const text = `GRANDE SPORTS - Match Analysis Submitted!\n\nThanks for submitting your match for analysis.\n\nSUBMISSION DETAILS:\n- Player: ${playerName}\n- Position: ${position}\n- Amount Paid: $${amount.toFixed(2)}\n\nWHAT HAPPENS NEXT:\n1. Our coaches will review your match video\n2. You'll receive an email with a link to book your review call\n3. After the call, we'll send your analysis folder via Google Drive\n\nTurnaround time: 48-72 hours\n\nQuestions? Contact us at info@grandesportstraining.com`
 
   return sendBrevoEmail({
     to,
@@ -445,7 +445,7 @@ export async function sendSessionAssignedEmail(data: SessionAssignedEmailData) {
       <td style="background-color: #101012; padding: 30px 40px; text-align: center;">
         <p style="color: #ffffff; margin: 0 0 15px 0; font-size: 16px; font-weight: 600;">Grande Sports Training</p>
         <div style="margin: 0 0 20px 0;"><a href="https://www.instagram.com/grandesportstraining/" target="_blank" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/512/174/174855.png" alt="Instagram" style="width: 28px; height: 28px;" /></a><a href="https://www.tiktok.com/@grandesportstraining" target="_blank" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/512/3046/3046121.png" alt="TikTok" style="width: 28px; height: 28px;" /></a></div>
-        <p style="color: rgba(255,255,255,0.5); margin: 0; font-size: 12px;">Questions? Contact us at td.grandesportstraining@gmail.com</p>
+        <p style="color: rgba(255,255,255,0.5); margin: 0; font-size: 12px;">Questions? Contact us at info@grandesportstraining.com</p>
       </td>
     </tr>
   </table>
@@ -545,7 +545,7 @@ export async function sendPostSessionFollowUpEmail(data: {
       <td style="background-color: #101012; padding: 30px 40px; text-align: center;">
         <p style="color: #ffffff; margin: 0 0 15px; font-size: 16px; font-weight: 600;">Grande Sports Training</p>
         <div style="margin: 0 0 20px;"><a href="https://www.instagram.com/grandesportstraining/" target="_blank" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/512/174/174855.png" alt="Instagram" style="width: 28px; height: 28px;" /></a><a href="https://www.tiktok.com/@grandesportstraining" target="_blank" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/512/3046/3046121.png" alt="TikTok" style="width: 28px; height: 28px;" /></a></div>
-        <p style="color: rgba(255,255,255,0.5); margin: 0; font-size: 12px;">td.grandesportstraining@gmail.com</p>
+        <p style="color: rgba(255,255,255,0.5); margin: 0; font-size: 12px;">info@grandesportstraining.com</p>
       </td>
     </tr>
   </table>

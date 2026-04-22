@@ -151,12 +151,14 @@ export default function MatchAnalysisPage() {
                   Track progress over time
                 </li>
               </ul>
-              <Link
-                href="/match-analysis/subscribe"
+              <a
+                href="https://grandesportstraining.com/products/personalized-tactical-online-coaching-monthly"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="btn-secondary w-full text-center block"
               >
-                Learn More
-              </Link>
+                Subscribe Now
+              </a>
             </div>
           </div>
 

@@ -39,16 +39,13 @@ export default function AdminAthletesPage() {
     test_date: format(new Date(), 'yyyy-MM-dd'),
     drill_180: '',
     drill_open_90: '',
-    drill_v: '',
     dribble_20_yard: '',
-    dribble_v: '',
     dribble_t: '',
+    straight_line_left: '',
+    straight_line_right: '',
     juggling_both: '',
     juggling_left: '',
     juggling_right: '',
-    straight_line_both: '',
-    straight_line_left: '',
-    straight_line_right: '',
     notes: '',
   })
 
@@ -292,16 +289,13 @@ export default function AdminAthletesPage() {
       test_date: format(new Date(), 'yyyy-MM-dd'),
       drill_180: '',
       drill_open_90: '',
-      drill_v: '',
       dribble_20_yard: '',
-      dribble_v: '',
       dribble_t: '',
+      straight_line_left: '',
+      straight_line_right: '',
       juggling_both: '',
       juggling_left: '',
       juggling_right: '',
-      straight_line_both: '',
-      straight_line_left: '',
-      straight_line_right: '',
       notes: '',
     })
     setShowTestModal(true)
@@ -316,16 +310,13 @@ export default function AdminAthletesPage() {
       test_date: testForm.test_date,
       drill_180: testForm.drill_180 ? parseInt(testForm.drill_180) : null,
       drill_open_90: testForm.drill_open_90 ? parseInt(testForm.drill_open_90) : null,
-      drill_v: testForm.drill_v ? parseInt(testForm.drill_v) : null,
       dribble_20_yard: testForm.dribble_20_yard ? parseFloat(testForm.dribble_20_yard) : null,
-      dribble_v: testForm.dribble_v ? parseFloat(testForm.dribble_v) : null,
       dribble_t: testForm.dribble_t ? parseFloat(testForm.dribble_t) : null,
+      straight_line_left: testForm.straight_line_left ? parseFloat(testForm.straight_line_left) : null,
+      straight_line_right: testForm.straight_line_right ? parseFloat(testForm.straight_line_right) : null,
       juggling_both: testForm.juggling_both ? parseInt(testForm.juggling_both) : null,
       juggling_left: testForm.juggling_left ? parseInt(testForm.juggling_left) : null,
       juggling_right: testForm.juggling_right ? parseInt(testForm.juggling_right) : null,
-      straight_line_both: testForm.straight_line_both ? parseFloat(testForm.straight_line_both) : null,
-      straight_line_left: testForm.straight_line_left ? parseFloat(testForm.straight_line_left) : null,
-      straight_line_right: testForm.straight_line_right ? parseFloat(testForm.straight_line_right) : null,
       notes: testForm.notes || null,
     }
 
@@ -896,9 +887,9 @@ export default function AdminAthletesPage() {
                 {/* Technical Passing */}
                 <div>
                   <h3 className="font-semibold text-gs-gray-700 mb-3 uppercase text-sm tracking-wide">
-                    Technical Passing (Score)
+                    Technical Passing - 7 Yard Distances (30 seconds)
                   </h3>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm text-gs-gray-600 mb-1">180 Drill</label>
                       <input
@@ -919,25 +910,15 @@ export default function AdminAthletesPage() {
                         placeholder="Score"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm text-gs-gray-600 mb-1">V Drill</label>
-                      <input
-                        type="number"
-                        value={testForm.drill_v}
-                        onChange={(e) => setTestForm({ ...testForm, drill_v: e.target.value })}
-                        className="input-field"
-                        placeholder="Score"
-                      />
-                    </div>
                   </div>
                 </div>
 
                 {/* Dribbling */}
                 <div>
                   <h3 className="font-semibold text-gs-gray-700 mb-3 uppercase text-sm tracking-wide">
-                    Dribbling (Time in seconds)
+                    Dribbling (Time in seconds - How fast they finish)
                   </h3>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
                       <label className="block text-sm text-gs-gray-600 mb-1">20 Yard</label>
                       <input
@@ -945,17 +926,6 @@ export default function AdminAthletesPage() {
                         step="0.01"
                         value={testForm.dribble_20_yard}
                         onChange={(e) => setTestForm({ ...testForm, dribble_20_yard: e.target.value })}
-                        className="input-field"
-                        placeholder="Seconds"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm text-gs-gray-600 mb-1">V Dribble</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={testForm.dribble_v}
-                        onChange={(e) => setTestForm({ ...testForm, dribble_v: e.target.value })}
                         className="input-field"
                         placeholder="Seconds"
                       />
@@ -972,14 +942,38 @@ export default function AdminAthletesPage() {
                       />
                     </div>
                   </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm text-gs-gray-600 mb-1">Straight Line (Left Foot)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={testForm.straight_line_left}
+                        onChange={(e) => setTestForm({ ...testForm, straight_line_left: e.target.value })}
+                        className="input-field"
+                        placeholder="Seconds"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gs-gray-600 mb-1">Straight Line (Right Foot)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={testForm.straight_line_right}
+                        onChange={(e) => setTestForm({ ...testForm, straight_line_right: e.target.value })}
+                        className="input-field"
+                        placeholder="Seconds"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Ball Control */}
                 <div>
                   <h3 className="font-semibold text-gs-gray-700 mb-3 uppercase text-sm tracking-wide">
-                    Ball Control
+                    Ball Control - Juggling (Max 3 tries)
                   </h3>
-                  <div className="grid grid-cols-3 gap-4 mb-4">
+                  <div className="grid grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm text-gs-gray-600 mb-1">Juggling (Both)</label>
                       <input
@@ -1008,41 +1002,6 @@ export default function AdminAthletesPage() {
                         onChange={(e) => setTestForm({ ...testForm, juggling_right: e.target.value })}
                         className="input-field"
                         placeholder="Count"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm text-gs-gray-600 mb-1">Straight Line (Both)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={testForm.straight_line_both}
-                        onChange={(e) => setTestForm({ ...testForm, straight_line_both: e.target.value })}
-                        className="input-field"
-                        placeholder="Seconds"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm text-gs-gray-600 mb-1">Straight Line (Left)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={testForm.straight_line_left}
-                        onChange={(e) => setTestForm({ ...testForm, straight_line_left: e.target.value })}
-                        className="input-field"
-                        placeholder="Seconds"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm text-gs-gray-600 mb-1">Straight Line (Right)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={testForm.straight_line_right}
-                        onChange={(e) => setTestForm({ ...testForm, straight_line_right: e.target.value })}
-                        className="input-field"
-                        placeholder="Seconds"
                       />
                     </div>
                   </div>
