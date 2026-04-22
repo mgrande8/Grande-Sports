@@ -52,18 +52,10 @@ export async function POST(request: NextRequest) {
         .eq('id', user.id)
     }
 
-    // Create Stripe Checkout session for subscription
-    // Fallback to hardcoded price ID if env var not working (temporary fix for launch)
-    const priceId = process.env.STRIPE_MATCH_ANALYSIS_PRICE_ID || 'price_1TOrMDFooJJWubcH4fyNJoEf'
+    // HARDCODED for launch - env var not working on Vercel
+    const priceId = 'price_1TOrMDFooJJWubcH4fyNJoEf'
 
-    // Debug logging
-    console.log('STRIPE_MATCH_ANALYSIS_PRICE_ID from env:', process.env.STRIPE_MATCH_ANALYSIS_PRICE_ID)
-    console.log('Using priceId:', priceId)
-
-    if (!priceId) {
-      console.error('STRIPE_MATCH_ANALYSIS_PRICE_ID not configured')
-      return NextResponse.json({ error: 'Subscription not configured' }, { status: 500 })
-    }
+    console.log('Using hardcoded priceId:', priceId)
 
     const checkoutSession = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
