@@ -92,7 +92,10 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-gs-gray-800 mt-8 pt-8 text-center text-sm text-gs-gray-500">
-          <p>© {new Date().getFullYear()} Grande Sports. All rights reserved.</p>
+          <p className="mb-2">© {new Date().getFullYear()} Grande Sports. All rights reserved.</p>
+          <Link href="/terms" className="text-gs-gray-500 hover:text-gs-green transition-colors">
+            Terms of Service
+          </Link>
         </div>
       </div>
     </footer>

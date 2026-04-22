@@ -686,7 +686,11 @@ export default function BookPage() {
               </button>
 
               <p className="text-xs text-gs-gray-500 text-center mt-3">
-                By booking, you agree to our 24-hour cancellation policy.
+                By booking, you agree to our{' '}
+                <Link href="/terms" className="text-gs-green hover:underline">
+                  Terms of Service
+                </Link>
+                , including the liability waiver and 24-hour cancellation policy.
               </p>
             </div>
           )}
